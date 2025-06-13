@@ -22,7 +22,7 @@ const multer = require('multer');
 // Configure multer for file uploads
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
-const { authenticateToken } = require('../middleware/auth');
+
 
 // crypto
 const { encrypt, decrypt, cipher, decipher } = require('../service/crypto');
@@ -232,11 +232,11 @@ async function generateSasToken(containerName, blobName) {
 
 
 // Validate Tenant Invitation Token
-router.post('/validate-tenant-invitation-token', (request, response) => {
+router.post('/validate-user-invitation-token', (request, response) => {
     const token = request.body.token;
 
 
-    dboperations.validateTenantInvitationToken(token)
+    dboperations.validateUserInvitationToken(token)
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -244,18 +244,18 @@ router.post('/validate-tenant-invitation-token', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /validate-tenant-invitation-token:", error);
+            console.error("Error in /validate-user-invitation-token:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
 
 
-router.post('/validate-agent-invitation-token', (request, response) => {
+router.post('/validate-company-invitation-token', (request, response) => {
     const token = request.body.token;
 
 
-    dboperations.validateAgentInvitationToken(token)
+    dboperations.validateCompanyInvitationToken(token)
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -263,17 +263,17 @@ router.post('/validate-agent-invitation-token', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /validate-agent-invitation-token:", error);
+            console.error("Error in /validate-company-invitation-token:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
-// Register Tenant
-router.post('/register-tenant', (request, response) => {
-    const tenant = request.body.tenant;
+// Register user
+router.post('/register-user', (request, response) => {
+    const user = request.body.user;
 
 
-    dboperations.registerTenant(tenant)
+    dboperations.registerUser(user)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -281,18 +281,18 @@ router.post('/register-tenant', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /register-tenant:", error);
+            console.error("Error in /register-user:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
-router.post('/register-agent', (request, response) => {
-    const agent = request.body.agent;
+router.post('/register-company', (request, response) => {
+    const company = request.body.company;
 
     //console.log(agent);
 
 
-    dboperations.registerAgent(agent)
+    dboperations.registerCompany(company)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -300,19 +300,17 @@ router.post('/register-agent', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /register-agent:", error);
+            console.error("Error in /register-company:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
 
-// Tenant Login
-router.post('/login-tenant', (request, response) => {
-    const tenant = request.body.tenant;
+// User Login
+router.post('/login-user', (request, response) => {
+    const user = request.body.user;
 
-
-
-    dboperations.loginTenant(tenant)
+    dboperations.loginUser(user)
         .then(result => {
             if (!result.success) {
                 return response.status(401).json(result);
@@ -320,19 +318,19 @@ router.post('/login-tenant', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /login-tenant:", error);
+            console.error("Error in /login-user:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
 // Get Tenant by Email
-router.post('/get-tenant-by-email', (request, response) => {
-    const email = request.body.email;
+router.post('/get-user-by-email', (request, response) => {
+    const email = request.query.email;
 
+   console.log(request);
+   console.log(email);
 
-   //console.log(email);
-
-    dboperations.getTenantByEmail(email )
+    dboperations.getUserByEmail(email )
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -341,17 +339,17 @@ router.post('/get-tenant-by-email', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /get-tenant-by-email:", error);
+            console.error("Error in /get-user-by-email:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
-router.post('/get-agent-by-email', (request, response) => {
-    const email = request.body.email;
+router.post('/get-company-by-email', (request, response) => {
+    const email = request.query.email;
 
 
 
-    dboperations.getAgentByEmail(email )
+    dboperations.getCompanyByEmail(email )
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -360,18 +358,18 @@ router.post('/get-agent-by-email', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /get-agent-by-email:", error);
+            console.error("Error in /get-company-by-email:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
 
-router.post('/get-tenant-by-id', (request, response) => {
-    const id = request.body.id;
+router.post('/get-user-by-id', (request, response) => {
+    const id = request.query.id;
 
 
 
-    dboperations.getTenantById(id )
+    dboperations.getUserById(id )
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -379,18 +377,18 @@ router.post('/get-tenant-by-id', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /get-tenant-by-id:", error);
+            console.error("Error in /get-user-by-id:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
 
-router.post('/get-agent-by-id', (request, response) => {
-    const id = request.body.id;
+router.post('/get-company-by-id', (request, response) => {
+    const id = request.query.id;
 
 
 
-    dboperations.getAgentById(id )
+    dboperations.getCompanyById(id )
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -398,7 +396,7 @@ router.post('/get-agent-by-id', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /get-agent-by-id:", error);
+            console.error("Error in /get-company-by-id:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });

@@ -18,12 +18,7 @@ const cron = require('node-cron');
 
 const app = express();
 
-// Initialize Firebase Admin SDK
-const serviceAccount = require("./auth/serviceAccountKey.json");
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
 
 // Middleware
 
@@ -32,18 +27,17 @@ app.use(bodyParser.json());
 app.use(cors());
 
 // Import your routes
-const countriesCitiesRouter = require('./routes/countries-cities');
+
 const usersRouter = require('./routes/users');
 const mailingRouter = require('./routes/mailing');
-const paymentsRouter = require('./routes/payments');
-const buildingsRouter = require('./routes/buildings');
+const objectsRouter = require('./routes/objects');
 
 // Existing routes
-app.use('/api/countries-cities', countriesCitiesRouter);
+
 app.use('/api/users', usersRouter);
 app.use('/api/mailing', mailingRouter);
-app.use('/api/payments', paymentsRouter);
-app.use('/api/buildings', buildingsRouter);
+
+app.use('/api/objects', objectsRouter);
 
 
 // Generate Firebase Custom Token
@@ -226,7 +220,7 @@ async function testTranslation() {
 // Schedule the cron job to run every minute
 cron.schedule('* * * * *', () => {
     //console.log('Checking for reminders...');
-    checkAndSendBookingReminders();
+  //  checkAndSendBookingReminders();
 });
 
 
@@ -353,7 +347,7 @@ async function checkAndSendBookingReminders() {
                                 console.log('Push notification request PROD');
         
                                 const response = await axios.post(
-                                    `${process.env.BASE_URL_PROD}api/mailing/email-tenant-booking-reminder`,
+                                    `${process.env.BASE_URL_PROD}api/mailing/email-user-booking-reminder`,
                                     emailPayload
                                 );
         
@@ -413,7 +407,7 @@ console.log('NODE_ENV:', process.env.NODE_ENV); //  Debugging
 
 // Start the server
 const port = process.env.PORT || 8090;
-app.listen(port, () => console.log(`Tenants10 Server v.1.0.6 running on port ${port}`));
+app.listen(port, () => console.log(`XM Server v.0.0.1 running on port ${port}`));
 
 
 //testTranslation(); // Test the translation service

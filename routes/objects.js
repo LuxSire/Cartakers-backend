@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const dboperations = require('../service/buildings/dboperations'); // Import the appropriate database operations module
+const dboperations = require('../service/objects/dboperations'); // Import the appropriate database operations module
 const e = require('express');
 
 // Get Last Building Announcement
@@ -150,11 +150,11 @@ router.post('/get-building-amenity-unit-timeslots', (request, response) => {
 
 
 
-router.post('/get-building-by-id', (request, response) => {
-    const id = request.body.id;
+router.post('/get-object-by-id', (request, response) => {
+    const id = request.query.id;
 
 
-    dboperations.getBuildingById(id)
+    dboperations.getObjectById(id)
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -162,7 +162,7 @@ router.post('/get-building-by-id', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /get-building-by-id:", error);
+            console.error("Error in /get-object-by-id:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
@@ -170,12 +170,12 @@ router.post('/get-building-by-id', (request, response) => {
 
 
 
-router.post('/get-buildings-by-agency-id', (request, response) => {
-    const agency_id = request.body.agency_id;
+router.post('/get-objects-by-company-id', (request, response) => {
+    const company = request.query.company;
 
 
 
-    dboperations.getBuildingsByAgencyId(agency_id)
+    dboperations.getObjectsByCompanyId(company)
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -183,16 +183,16 @@ router.post('/get-buildings-by-agency-id', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /get-buildings-by-agency-id:", error);
+            console.error("Error in /get-objects-by-company:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
-router.post('/update-building-details', (request, response) => {
-    const { building_id, name, street, building_number, zip_code, location, image_url } = request.body;
+router.post('/update-object-details', (request, response) => {
+    const { object_id, name, street,  zip_code, location, image_url } = request.body;
 
 
-    dboperations.updateBuildingDetails(building_id, name, street, building_number, zip_code, location, image_url)
+    dboperations.updateObjectDetails(object_id, name, street, zip_code, location, image_url)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -200,7 +200,7 @@ router.post('/update-building-details', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /update-building-details:", error);
+            console.error("Error in /update-object-details:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
@@ -276,14 +276,13 @@ router.post('/get-contract-by-id', (request, response) => {
 
 
 
-router.post('/add-tenant-to-contract', (request, response) => {
-    const contract_id = request.body.contract_id;
-    const tenant_id = request.body.tenant_id;
-    const is_primary = request.body.is_primary;
+router.post('/add-user-to-object', (request, response) => {
+    const object_id = request.query.object_id;
+    const user_id = request.body.user_id;
 
     //console.log("Adding tenant to contract:", contract_id, tenant_id, is_primary);
 
-    dboperations.addTenantToContract(contract_id, tenant_id, is_primary)
+    dboperations.addUserToObject(object_id, user_id)
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -291,17 +290,17 @@ router.post('/add-tenant-to-contract', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /add-tenant-to-contract:", error);
+            console.error("Error in /add-user-to-object:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
 
-router.post('/delete-tenants-from-contract', (request, response) => {
-    const contract_id = request.body.contract_id;
+router.post('/delete-user-from-object', (request, response) => {
+    const object_id = request.body.object_id;
 
 
-    dboperations.deleteTenantsFromContract(contract_id)
+    dboperations.deleteUserFromObject(object_id)
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -309,7 +308,7 @@ router.post('/delete-tenants-from-contract', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /delete-tenants-from-contract:", error);
+            console.error("Error in /delete-user-from-object:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
@@ -511,12 +510,12 @@ router.post('/assign-units-batch', async (req, res) => {
 });
 
 
-router.post('/remove-tenant-from-contract', (request, response) => {
-    const contract_id = request.body.contract_id;
-    const tenant_id = request.body.tenant_id;
+router.post('/remove-user-from-object', (request, response) => {
+    const object_id = request.query.object_id;
+    const user_id = request.query.user_id;
 
 
-    dboperations.removeTenantFromContract(contract_id,tenant_id)
+    dboperations.removeUserFromObject(object_id,user_id)
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -524,14 +523,14 @@ router.post('/remove-tenant-from-contract', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /remove-tenant-from-contract:", error);
+            console.error("Error in /remove-user-from-object:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
 
-router.post('/get-all-documents-by-contract-id', (request, response) => {
-    const building_id = request.body.building_id;
+router.post('/get-all-documents-by-object-id', (request, response) => {
+    const object_id = request.query.object_id;
 
     dboperations.getAllNonContractTenantsByBuildingId(building_id)
         .then(result => {
@@ -603,10 +602,10 @@ router.post('/update-file-name', (request, response) => {
 
 
 
-router.post('/get-all-building-contracts', (request, response) => {
-    const building_id = request.body.building_id;
+router.post('/get-all-object-permissions', (request, response) => {
+    const object_id = request.query.id;
 
-    dboperations.getAllBuildingContracts(building_id)
+    dboperations.getAllObjectPermissions(object_id)
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -614,17 +613,17 @@ router.post('/get-all-building-contracts', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /get-all-building-contracts:", error);
+            console.error("Error in /get-all-object-permissions:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
 
-router.post('/delete-contract-by-id', (request, response) => {
-    const contract_id = request.body.contract_id;
+router.post('/delete-object-by-id', (request, response) => {
+    const object_id = request.query.object_id;
 
 
-    dboperations.deleteContractById(contract_id)
+    dboperations.deleteObjectById(object_id)
         .then(result => {
             // if (!result.success) {
             //     return response.status(404).json(result);
@@ -632,7 +631,7 @@ router.post('/delete-contract-by-id', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /delete-contract-by-id:", error);
+            console.error("Error in /delete-object-by-id:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
@@ -674,12 +673,12 @@ router.post('/get-building-recent-bookings', (request, response) => {
 });
 
 
-router.post('/get-building-all-requests', (request, response) => {
-    const building_id = request.body.building_id;
+router.post('/get-object-all-requests', (request, response) => {
+    const object_id = request.query.object_id;
 
   
 
-    dboperations.getBuildingAllRequests(building_id)
+    dboperations.getObjectAllRequests(object_id)
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -687,7 +686,7 @@ router.post('/get-building-all-requests', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /get-building-all-requests:", error);
+            console.error("Error in /get-object-all-requests:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });

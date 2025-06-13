@@ -184,10 +184,10 @@ async function getBuildingAmenityUnitTimeslots(amenity_unit_id, date, exclude_bo
 }
 
 
-async function getBuildingById(id) {
+async function getObjectById(id) {
     try {
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.get_building_by_id(?)`,
+            `CALL ${process.env['DB_DATABASE']}.get_object_by_id(?)`,
             [id]
         );
 
@@ -196,14 +196,14 @@ async function getBuildingById(id) {
 
         return {
             success: requests.length > 0 ? true : false,
-            message: requests.length > 0 ? "Building retrieved successfully" : "No building found",
+            message: requests.length > 0 ? "Object retrieved successfully" : "No object found",
             data: requests
         };
     } catch (error) {
-        console.error('Error in getBuildingById:', error);
+        console.error('Error in getObjectById:', error);
         return {
             success: false,
-            message: "Failed to retrieve building due to a database error",
+            message: "Failed to retrieve object due to a database error",
             data: []
         };
     }
@@ -727,25 +727,25 @@ async function updateFileName(document_id,file_name) {
 }
 
 
-async function getAllBuildingContracts(building_id) {
+async function getAllObjectPermissions(object_id) {
     try {
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.get_all_building_contracts(?)`,
-            [building_id]
+            `CALL ${process.env['DB_DATABASE']}.get_all_object_permissions(?)`,
+            [object_id]
         );
 
         const buildings = result[0] || []; // Ensure valid data
 
         return {
             success: buildings.length > 0,
-            message: buildings.length > 0 ? "Building contracts retrieved successfully" : "No building contracts found",
+            message: buildings.length > 0 ? "Object permissions retrieved successfully" : "No object permissions found",
             data: buildings
         };
     } catch (error) {
-        console.error('Error in getAllBuildingContracts:', error);
+        console.error('Error in getAllObjectPermissions:', error);
         return {
             success: false,
-            message: "Failed to retrieve building unit contract due to a database error",
+            message: "Failed to retrieve object permissions due to a database error",
             data: []
         };
     }
@@ -836,7 +836,7 @@ module.exports = {
     getBuildingPosts: getBuildingPosts,
     getBuildingBookingTypes: getBuildingBookingTypes,
     getBuildingAmenityUnitTimeslots: getBuildingAmenityUnitTimeslots,
-    getBuildingById: getBuildingById,
+    getObjectById: getObjectById,
     getBuildingsByAgencyId: getBuildingsByAgencyId,
     updateBuildingDetails: updateBuildingDetails,
     getBuildingUnitsById: getBuildingUnitsById,
@@ -857,7 +857,7 @@ module.exports = {
     createContractMedia: createContractMedia,
     deleteDocumentById: deleteDocumentById,
     updateFileName: updateFileName,
-    getAllBuildingContracts: getAllBuildingContracts,
+    getAllObjectPermissions: getAllObjectPermissions,
     deleteContractById: deleteContractById,
     getBuildingRecentBookings: getBuildingRecentBookings,
     getBuildingAllRequests: getBuildingAllRequests

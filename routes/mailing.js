@@ -34,12 +34,12 @@ async function getAccessToken() {
     return data.access_token;
 }
 
-router.post("/email-tenant-reset-password", async (req, res) => {
+router.post("/email-user-reset-password", async (req, res) => {
     try {
         const { email, greetings, body_text, reset_code_text, reset_code, available_on_text, help_text, support_text, subject } = req.body;
 
         // Load email template
-        let emailTemplate = fs.readFileSync(path.join(__dirname, "../templates/tenant-reset-user-password.html"), "utf8");
+        let emailTemplate = fs.readFileSync(path.join(__dirname, "../templates/user-reset-user-password.html"), "utf8");
 
         // Replace placeholders
         emailTemplate = emailTemplate.replace("[GREETINGS-TEXT]", greetings)
@@ -88,12 +88,12 @@ router.post("/email-tenant-reset-password", async (req, res) => {
 });
 
 
-router.post("/email-tenant-booking-reminder", async (req, res) => {
+router.post("/email-user-booking-reminder", async (req, res) => {
     try {
         const { email, greetings, body_text, body2_title_text, body2_text, available_on_text, help_text, support_text, subject } = req.body;
 
         // Load email template
-        let emailTemplate = fs.readFileSync(path.join(__dirname, "../templates/tenant-booking-reminder.html"), "utf8");
+        let emailTemplate = fs.readFileSync(path.join(__dirname, "../templates/user-booking-reminder.html"), "utf8");
 
         // Replace placeholders
         emailTemplate = emailTemplate.replace("[GREETINGS-TEXT]", greetings)
@@ -142,7 +142,7 @@ router.post("/email-tenant-booking-reminder", async (req, res) => {
 });
 
 
-router.post("/email-tenant-mail", async (req, res) => {
+router.post("/email-user-mail", async (req, res) => {
     try {
         const { email, greetings, body_text, body2_title_text, body2_text, subject, lang } = req.body;
 
@@ -159,7 +159,7 @@ router.post("/email-tenant-mail", async (req, res) => {
 
 
         // Load email template
-        let emailTemplate = fs.readFileSync(path.join(__dirname, "../templates/tenant-mail.html"), "utf8");
+        let emailTemplate = fs.readFileSync(path.join(__dirname, "../templates/user-mail.html"), "utf8");
 
         // Replace placeholders
         emailTemplate = emailTemplate.replace("[GREETINGS-TEXT]", translatedGreetings)
@@ -211,7 +211,7 @@ router.post("/email-tenant-mail", async (req, res) => {
 
 
 
-router.post("/email-agency-user-mail", async (req, res) => {
+router.post("/email-company-user-mail", async (req, res) => {
     try {
         const { email, greetings, body_text, body2_title_text, body2_text, subject, lang } = req.body;
 
@@ -228,7 +228,7 @@ router.post("/email-agency-user-mail", async (req, res) => {
 
 
         // Load email template
-        let emailTemplate = fs.readFileSync(path.join(__dirname, "../templates/agency-user-mail.html"), "utf8");
+        let emailTemplate = fs.readFileSync(path.join(__dirname, "../templates/company-user-mail.html"), "utf8");
 
         // Replace placeholders
         emailTemplate = emailTemplate.replace("[GREETINGS-TEXT]", translatedGreetings)

@@ -11,10 +11,10 @@ const axios = require("axios"); //  Import axios
 
 //// start flutter calls 
 
-async function validateTenantInvitationToken(token) {
+async function validateUserInvitationToken(token) {
     try {
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.validate_tenant_invitation_token(?)`,
+            `CALL ${process.env['DB_DATABASE']}.validate_user_invitation_token(?)`,
             [token]
         );
 
@@ -25,7 +25,7 @@ async function validateTenantInvitationToken(token) {
             data: data
         };
     } catch (error) {
-        console.error('Error in validateTenantInvitationToken:', error);
+        console.error('Error in validateUserInvitationToken:', error);
         return {
             success: false,
             message: "Failed to validate token due to a database error",
@@ -58,42 +58,42 @@ async function validateAgentInvitationToken(token) {
     }
 }
 
-async function registerTenant(tenant) {
+async function registerUser(user) {
     try {
-        const { tenant_id, email, first_name, last_name, phone_number, country_code, password } = tenant;
+        const { id, email, first_name, last_name, phone, country, password } = user;
 
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.register_update_tenant(?,?,?,?,?,?,?)`,
-            [email, password, first_name, last_name, phone_number, country_code, tenant_id]
+            `CALL ${process.env['DB_DATABASE']}.register_update_user(?,?,?,?,?,?,?)`,
+            [email, password, first_name, last_name, phone, country, id]
         );
-
+        
         // Fix: Ensure that only the first item is returned
         const data = Array.isArray(result) && result.length > 0 ? result[0][0] : null;
 
         return {
             success: !!data, // True if data exists
-            message: data ? "Tenant registered successfully" : "Failed to register tenant",
+            message: data ? "User registered successfully" : "Failed to register user",
             data: data ?? {} // Return an empty object if no data exists
         };
     } catch (error) {
-        console.error('Error in registerTenant:', error);
+        console.error('Error in registerUser:', error);
         return {
             success: false,
-            message: "Failed to register tenant due to a database error",
+            message: "Failed to register user due to a database error",
             data: null
         };
     }
 }
 
-async function registerAgent(agent) {
+async function registerCompany(company) {
     try {
 
       //  console.log('registerAgent:', agent);
-        const { agent_id, email, first_name, last_name, password } = agent;
+        const {  id, name, user,phone,country } = company;
 
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.register_update_agent(?,?,?,?,?)`,
-            [email, password, first_name, last_name, agent_id]
+            `CALL ${process.env['DB_DATABASE']}.register_update_company(?,?,?,?,?)`,
+            [ name,user, phone, country, id]
         );
 
         // Fix: Ensure that only the first item is returned
@@ -101,14 +101,14 @@ async function registerAgent(agent) {
 
         return {
             success: !!data, // True if data exists
-            message: data ? "Agent registered successfully" : "Failed to register agent",
+            message: data ? "Company registered successfully" : "Failed to register company",
             data: data ?? {} // Return an empty object if no data exists
         };
     } catch (error) {
-        console.error('Error in registerAgent:', error);
+        console.error('Error in register Company:', error);
         return {
             success: false,
-            message: "Failed to register agent due to a database error",
+            message: "Failed to register company due to a database error",
             data: null
         };
     }
@@ -116,12 +116,12 @@ async function registerAgent(agent) {
 
 
 
-async function loginTenant(tenant) {
+async function loginUser(user) {
     try {
-        const { email, password } = tenant;
+        const { email, password } = user;
 
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.login_tenant(?,?)`,
+            `CALL ${process.env['DB_DATABASE']}.login_user(?,?)`,
             [email, password]
         );
 
@@ -132,7 +132,7 @@ async function loginTenant(tenant) {
             data: data
         };
     } catch (error) {
-        console.error('Error in loginTenant:', error);
+        console.error('Error in login user:', error);
         return {
             success: false,
             message: "Failed to log in due to a database error",
@@ -141,13 +141,13 @@ async function loginTenant(tenant) {
     }
 }
 
-async function getTenantByEmail(email) {
+async function getUserByEmail(email) {
     try {
 
          //console.log('getTenantByEmail:', email);
 
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.get_tenant_by_email(?)`,
+            `CALL ${process.env['DB_DATABASE']}.get_user_by_email(?)`,
             [email]
         );
 
@@ -158,26 +158,26 @@ async function getTenantByEmail(email) {
        // console.log('getTenantByEmail:', data);
         return {
             success: data.length > 0,
-            message: data.length > 0 ? "Tenant found" : "Tenant not found",
+            message: data.length > 0 ? "User found" : "User not found",
             data: data
         };
     } catch (error) {
-        console.error('Error in getTenantByEmail:', error);
+        console.error('Error in getUserByEmail:', error);
         return {
             success: false,
-            message: "Failed to retrieve tenant due to a database error",
+            message: "Failed to retrieve user due to a database error",
             data: null
         };
     }
 }
 
-async function getAgentByEmail(email) {
+async function getCompanyByEmail(email) {
     try {
 
          //console.log('getTenantByEmail:', email);
 
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.get_agent_by_email(?)`,
+            `CALL ${process.env['DB_DATABASE']}.get_company_by_email(?)`,
             [email]
         );
 
@@ -202,56 +202,54 @@ async function getAgentByEmail(email) {
 
 
 
-async function getTenantById(id) {
+async function getUserById(id) {
     try {
 
         // console.log('getTenantById:', id);
 
 
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.get_tenant_by_id(?)`,
+            `CALL ${process.env['DB_DATABASE']}.get_user_by_id(?)`,
             [id]
         );
 
         const data = result[0] || [];
         return {
             success: data.length > 0,
-            message: data.length > 0 ? "Tenant found" : "Tenant not found",
+            message: data.length > 0 ? "User found" : "User not found",
             data: data
         };
     } catch (error) {
-        console.error('Error in getTenantById:', error);
+        console.error('Error in getUserById:', error);
         return {
             success: false,
-            message: "Failed to retrieve tenant by id due to a database error",
+            message: "Failed to retrieve user by id due to a database error",
             data: null
         };
     }
 }
 
 
-async function getAgentById(id) {
+async function getCompanyById(id) {
     try {
-
-        // console.log('getTenantById:', id);
 
 
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.get_agent_by_id(?)`,
+            `CALL ${process.env['DB_DATABASE']}.get_company_by_id(?)`,
             [id]
         );
 
         const data = result[0] || [];
         return {
             success: data.length > 0,
-            message: data.length > 0 ? "Agent found" : "Agent not found",
+            message: data.length > 0 ? "Company found" : "Company not found",
             data: data
         };
     } catch (error) {
-        console.error('Error in getagentById:', error);
+        console.error('Error in getcompanyById:', error);
         return {
             success: false,
-            message: "Failed to retrieve agent by id due to a database error",
+            message: "Failed to retrieve company by id due to a database error",
             data: null
         };
     }
@@ -1895,10 +1893,10 @@ async function deleteTenantBuildingTenant(tenant_id, building_id) {
 
 module.exports = {
 
-    validateTenantInvitationToken: validateTenantInvitationToken,
-    registerTenant: registerTenant,
-    loginTenant: loginTenant,
-    getTenantByEmail: getTenantByEmail,
+    validateUserInvitationToken: validateUserInvitationToken,
+    registerUser: registerUser,
+    loginUser: loginUser,
+    getUserByEmail: getUserByEmail,
     getTenantUpcomingBooking: getTenantUpcomingBooking,
     createTenantBuildingRequest: createTenantBuildingRequest,
     createTenantBuildingRequestMedia: createTenantBuildingRequestMedia,
@@ -1910,7 +1908,7 @@ module.exports = {
     createTenantBuildingPostComment: createTenantBuildingPostComment,
     createTenantBuildingPostLike: createTenantBuildingPostLike,
     deleteTenantBuildingPostLike: deleteTenantBuildingPostLike,
-    getTenantById: getTenantById,
+    getUserById: getUserById,
     updateTenantPersonalDetails: updateTenantPersonalDetails,
     getTenantBuildingUpcomingBookings: getTenantBuildingUpcomingBookings,
     getTenantBuildingPastBookings: getTenantBuildingPastBookings,
@@ -1943,10 +1941,10 @@ module.exports = {
     deleteTenantBuildingPostComment: deleteTenantBuildingPostComment,
     getTenantUpcomingBookingsReminders: getTenantUpcomingBookingsReminders,
     updateBookingReminderSent: updateBookingReminderSent,
-    validateAgentInvitationToken: validateAgentInvitationToken,
-    registerAgent: registerAgent,
-    getAgentByEmail: getAgentByEmail,
-    getAgentById: getAgentById,
+    validateCompanyInvitationToken: validateCompanyInvitationToken,
+    registerCompany: registerCompany,
+    getCompanyByEmail: getCompanyByEmail,
+    getCompanyById: getCompanyById,
     getTenantsByContractId: getTenantsByContractId,
     createQuickNewTenant: createQuickNewTenant,
     updateTenantContractPrimary: updateTenantContractPrimary,
