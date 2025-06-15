@@ -23,7 +23,7 @@ router.post('/get-object-last-announcement', (request, response) => {
 
 // Get object Request Logs
 router.post('/get-object-request-logs', (request, response) => {
-    const request_id = request.body.request_id;
+    const request_id = request.query.request_id;
 
   
 
@@ -180,7 +180,7 @@ router.post('/add-user-to-object', (request, response) => {
 
 
 router.post('/delete-user-from-object', (request, response) => {
-    const object_id = request.body.object_id;
+    const object_id = request.query.object_id;
 
 
     dboperations.deleteUserFromObject(object_id)
@@ -254,8 +254,8 @@ router.post('/delete-document-by-id', (request, response) => {
 
 
 router.post('/update-file-name', (request, response) => {
-    const document_id = request.body.document_id;
-    const file_name = request.body.file_name;
+    const document_id = request.query.document_id;
+    const file_name = request.query.file_name;
 
 
     dboperations.updateFileName(document_id, file_name)

@@ -233,7 +233,7 @@ async function generateSasToken(containerName, blobName) {
 
 // Validate Tenant Invitation Token
 router.post('/validate-user-invitation-token', (request, response) => {
-    const token = request.body.token;
+    const token = request.query.token;
 
 
     dboperations.validateUserInvitationToken(token)
@@ -252,7 +252,7 @@ router.post('/validate-user-invitation-token', (request, response) => {
 
 
 router.post('/validate-company-invitation-token', (request, response) => {
-    const token = request.body.token;
+    const token = request.query.token;
 
 
     dboperations.validateCompanyInvitationToken(token)
@@ -270,7 +270,7 @@ router.post('/validate-company-invitation-token', (request, response) => {
 
 // Register user
 router.post('/register-user', (request, response) => {
-    const user = request.body.user;
+    const user = request.query.user;
 
 
     dboperations.registerUser(user)
@@ -287,7 +287,7 @@ router.post('/register-user', (request, response) => {
 });
 
 router.post('/register-company', (request, response) => {
-    const company = request.body.company;
+    const company = request.query.company;
 
     //console.log(agent);
 
@@ -308,7 +308,7 @@ router.post('/register-company', (request, response) => {
 
 // User Login
 router.post('/login-user', (request, response) => {
-    const user = request.body.user;
+    const user = request.query.user;
 
     dboperations.loginUser(user)
         .then(result => {
@@ -404,7 +404,7 @@ router.post('/get-company-by-id', (request, response) => {
 
 // Get Tenant Upcoming Booking
 router.post('/get-user-upcoming-booking', (request, response) => {
-    const contract_id = request.body.contract_id;
+    const contract_id = request.query.contract_id;
 
 
 
@@ -462,30 +462,9 @@ router.post('/create-user-object-request-log', (request, response) => {
         });
 });
 
-// Create Tenant Building Request Media
-router.post('/create-tenant-building-request-media', (request, response) => {
-    const { request_id, media_url } = request.body;
-
-    // if (!request_id || !media_url) {
-    //     return response.status(400).json({ success: false, message: "Missing required parameters" });
-    // }
-
-    dboperations.createTenantBuildingRequestMedia(request_id, media_url)
-        .then(result => {
-            if (!result.success) {
-                return response.status(400).json(result);
-            }
-            response.json(result);
-        })
-        .catch(error => {
-            console.error("Error in /create-tenant-building-request-media:", error);
-            response.status(500).json({ success: false, message: "Internal server error" });
-        });
-});
-
-// Get Tenant Building Requests
+// Get User Object Requests
 router.post('/get-user-object-requests', (request, response) => {
-    const contract_id = request.body.contract_id;
+    const object_id = request.query.object_id;
 
 
     dboperations.getUserObjectRequests(contract_id)
@@ -501,12 +480,12 @@ router.post('/get-user-object-requests', (request, response) => {
         });
 });
 
-// Update Tenant Building Request Status
-router.post('/update-tenant-building-request-status', (request, response) => {
+// Update User Object Request Status
+router.post('/update-user-object-request-status', (request, response) => {
     const { request_id, status } = request.body;
 
 
-    dboperations.updateTenantBuildingRequestStatus(request_id, status)
+    dboperations.updateUserObjectRequestStatus(request_id, status)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -521,11 +500,11 @@ router.post('/update-tenant-building-request-status', (request, response) => {
 
   
 
-router.post('/create-tenant-building-post', (request, response) => {
-    const { building_id, creator_id, title, is_receive_private_message, description, creator_type } = request.body;
+router.post('/create-user-object-post', (request, response) => {
+    const { object_id, creator_id, title, is_receive_private_message, description, creator_type } = request.query;
 
 
-    dboperations.createTenantBuildingPost(building_id, creator_id, title, is_receive_private_message, 
+    dboperations.createUserObjectPost(object_id, creator_id, title, is_receive_private_message, 
         description, creator_type)
         .then(result => {
             if (!result.success) {
@@ -534,7 +513,7 @@ router.post('/create-tenant-building-post', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /create-tenant-building-post:", error);
+            console.error("Error in /create-user-object-post:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
@@ -543,14 +522,14 @@ router.post('/create-tenant-building-post', (request, response) => {
 
 
 
-router.post('/create-tenant-building-post-media', (request, response) => {
+router.post('/create-user-object-post-media', (request, response) => {
     const { post_id, media_url } = request.body;
 
     // if (!request_id || !media_url) {
     //     return response.status(400).json({ success: false, message: "Missing required parameters" });
     // }
 
-    dboperations.createTenantBuildingPostMedia(post_id, media_url)
+    dboperations.createUserObjectPostMedia(post_id, media_url)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -558,70 +537,16 @@ router.post('/create-tenant-building-post-media', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /create-tenant-building-post-media:", error);
+            console.error("Error in /create-user-object-post-media:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
 
-router.post('/create-tenant-building-post-comment', (request, response) => {
-    const { post_id, creator_id, creator_type, description, post_owner_id } = request.body;
+router.post('/update-user-personal-details', (request, response) => {
+    const { user_id, display_name, phone_number, country_code, profile_pic } = request.body;
 
-
-    dboperations.createTenantBuildingPostComment(post_id, creator_id, creator_type, description, post_owner_id)
-        .then(result => {
-            if (!result.success) {
-                return response.status(400).json(result);
-            }
-            response.json(result);
-        })
-        .catch(error => {
-            console.error("Error in /create-tenant-building-post-comment:", error);
-            response.status(500).json({ success: false, message: "Internal server error" });
-        });
-});
-
-
-router.post('/create-tenant-building-post-like', (request, response) => {
-    const { post_id, user_id, user_type } = request.body;
-
-
-    dboperations.createTenantBuildingPostLike(post_id, user_id, user_type)
-        .then(result => {
-            if (!result.success) {
-                return response.status(400).json(result);
-            }
-            response.json(result);
-        })
-        .catch(error => {
-            console.error("Error in /create-tenant-building-post-like:", error);
-            response.status(500).json({ success: false, message: "Internal server error" });
-        });
-});
-
-
-router.post('/delete-tenant-building-post-like', (request, response) => {
-    const { post_id, user_id, user_type } = request.body;
-
-
-    dboperations.deleteTenantBuildingPostLike(post_id, user_id, user_type)
-        .then(result => {
-            if (!result.success) {
-                return response.status(400).json(result);
-            }
-            response.json(result);
-        })
-        .catch(error => {
-            console.error("Error in /delete-tenant-building-post-like:", error);
-            response.status(500).json({ success: false, message: "Internal server error" });
-        });
-});
-
-
-router.post('/update-tenant-personal-details', (request, response) => {
-    const { tenant_id, display_name, phone_number, country_code, profile_pic } = request.body;
-
-    dboperations.updateTenantPersonalDetails(tenant_id, display_name, phone_number, country_code, profile_pic)
+    dboperations.updateUserPersonalDetails(user_id, display_name, phone_number, country_code, profile_pic)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -631,18 +556,18 @@ router.post('/update-tenant-personal-details', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /update-tenant-personal-details:", error);
+            console.error("Error in /update-user-personal-details:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
 
 
-router.post('/get-tenant-upcoming-bookings', (request, response) => {
-    const contract_id = request.body.contract_id;
+router.post('/get-user-object-docs', (request, response) => {
+    const object_id = request.query.object_id;
 
 
-    dboperations.getTenantBuildingUpcomingBookings(contract_id)
+    dboperations.getUserObjectDocs(object_id)
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -652,76 +577,18 @@ router.post('/get-tenant-upcoming-bookings', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /get-tenant-upcoming-bookings:", error);
-            response.status(500).json({ success: false, message: "Internal server error" });
-        });
-});
-
-
-router.post('/get-tenant-past-bookings', (request, response) => {
-    const contract_id = request.body.contract_id;
-
-    //console.log(tenant_id);
-
-
-    dboperations.getTenantBuildingPastBookings(contract_id)
-        .then(result => {
-            if (!result.success) {
-                return response.status(404).json(result);
-            }
-
-            response.json(result);
-        })
-        .catch(error => {
-            console.error("Error in /get-tenant-past-bookings:", error);
-            response.status(500).json({ success: false, message: "Internal server error" });
-        });
-});
-
-
-router.post('/get-tenant-building-booking-types', (request, response) => {
-    const tenant_id = request.body.tenant_id;
-
-
-
-    dboperations.getTenantBuildingBookingTypes(tenant_id)
-        .then(result => {
-            if (!result.success) {
-                return response.status(404).json(result);
-            }
-            response.json(result);
-        })
-        .catch(error => {
-            console.error("Error in /get-tenant-building-booking-types:", error);
-            response.status(500).json({ success: false, message: "Internal server error" });
-        });
-});
-
-router.post('/get-tenant-building-available-amenity-units', (request, response) => {
-    const tenant_id = request.body.tenant_id;
-    const amenity_id = request.body.amenity_id;
-
-    dboperations.getTenantBuildingAvailableAmenityUnits(tenant_id, amenity_id)
-        .then(result => {
-            if (!result.success) {
-                return response.status(404).json(result);
-            }
-            response.json(result);
-        })
-        .catch(error => {
-            console.error("Error in /get-tenant-building-available-amenity-units:", error);
+            console.error("Error in /get-user-docs:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
 
 
-router.post('/create-tenant-building-booking', (request, response) => {
-    const { tenant_id, amenity_unit_id, booking_date, start_time, end_time, contract_id } = request.body;
+router.post('/update-user-object-request-status', (request, response) => {
+    const { request_id, status } = request.query;
 
 
-    dboperations.createTenantBuildingBooking(tenant_id, amenity_unit_id, booking_date, start_time,
-         end_time, contract_id )
+    dboperations.updateUserObjectRequestStatus(request_id, status)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -729,19 +596,16 @@ router.post('/create-tenant-building-booking', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /create-tenant-building-booking:", error);
+            console.error("Error in /update-user-object-request-status:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
-
-router.post('/update-tenant-building-booking', (request, response) => {
-    const { booking_id, status_id, booking_date, start_time, end_time } = request.body;
-
+router.post('/update-user-reset-password-code', (request, response) => {
+    const { email, reset_code } = request.query;
 
 
-
-    dboperations.updateTenantBuildingBooking(booking_id, status_id, booking_date, start_time, end_time)
+    dboperations.updateUserResetPasswordCode(email, reset_code)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -749,19 +613,16 @@ router.post('/update-tenant-building-booking', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /uopdate-tenant-building-booking:", error);
+            console.error("Error in /update-user-reset-password-code:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
-
-router.post('/update-tenant-building-booking-status', (request, response) => {
-    const { booking_id, status_id } = request.body;
-
+router.post('/update-user-device-token', (request, response) => {
+    const { user_id, device_token } = request.query;
 
 
-
-    dboperations.updateTenantBuildingBookingStatus(booking_id, status_id)
+    dboperations.updateUserDeviceToken(tenant_id, device_token)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -769,99 +630,35 @@ router.post('/update-tenant-building-booking-status', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /uopdate-tenant-building-booking-status:", error);
+            console.error("Error in /update-user-device-token:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
+router.post('/get-user-by-reset-code', (request, response) => {
+    const email = request.query.email;
+    const reset_code = request.query.reset_code;
 
 
-router.post('/get-tenant-all-bookings', (request, response) => {
-    const contract_id = request.body.contract_id;
-
-
-    dboperations.getTenantBuildingAllBookings(contract_id)
+    dboperations.getUserByResetCode(email, reset_code)
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
             }
-
-           
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /get-tenant-all-bookings:", error);
+            console.error("Error in /get-user-by-reset-code:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
 
-router.post('/get-tenant-all-bookings-by-tenant-id', (request, response) => {
-    const tenant_id = request.body.tenant_id;
+router.post('/update-user-password', (request, response) => {
+    const { user_id, password } = request.query;
 
 
-    dboperations.getTenantBuildingAllBookingsByTenantId(tenant_id)
-        .then(result => {
-            if (!result.success) {
-                return response.status(404).json(result);
-            }
-
-           
-            response.json(result);
-        })
-        .catch(error => {
-            console.error("Error in /get-tenant-all-bookings-by-tenant-id:", error);
-            response.status(500).json({ success: false, message: "Internal server error" });
-        });
-});
-
-
-
-
-router.post('/get-tenant-building-docs', (request, response) => {
-    const contract_id = request.body.contract_id;
-
-
-    dboperations.getTenantBuildingDocs(contract_id)
-        .then(result => {
-            if (!result.success) {
-                return response.status(404).json(result);
-            }
-
-           
-            response.json(result);
-        })
-        .catch(error => {
-            console.error("Error in /get-tenant-docs:", error);
-            response.status(500).json({ success: false, message: "Internal server error" });
-        });
-});
-
-
-router.post('/get-tenant-building-help-guides', (request, response) => {
-    const building_id = request.body.building_id;
-
-
-    dboperations.getTenantBuildingHelpGuides(building_id)
-        .then(result => {
-            if (!result.success) {
-                return response.status(404).json(result);
-            }
-
-           
-            response.json(result);
-        })
-        .catch(error => {
-            console.error("Error in /get-tenant-help-guides:", error);
-            response.status(500).json({ success: false, message: "Internal server error" });
-        });
-});
-
-router.post('/update-tenant-building-request-status', (request, response) => {
-    const { request_id, status } = request.body;
-
-
-    dboperations.updateTenantBuildingRequestStatus(request_id, status)
+    dboperations.updateUserPassword(user_id, password)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -869,51 +666,19 @@ router.post('/update-tenant-building-request-status', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /update-tenant-building-request-status:", error);
+            console.error("Error in /update-user-password:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
-router.post('/update-tenant-reset-password-code', (request, response) => {
-    const { email, reset_code } = request.body;
+
+router.post('/get-user-notifications', (request, response) => {
+    const user_id = request.query.user_id;
+    const read_filter = request.query.read_filter; // 0 - all, 1 - unread, 2 - read
 
 
-    dboperations.updateTenantResetPasswordCode(email, reset_code)
-        .then(result => {
-            if (!result.success) {
-                return response.status(400).json(result);
-            }
-            response.json(result);
-        })
-        .catch(error => {
-            console.error("Error in /update-tenant-reset-password-code:", error);
-            response.status(500).json({ success: false, message: "Internal server error" });
-        });
-});
 
-router.post('/update-tenant-device-token', (request, response) => {
-    const { tenant_id, device_token } = request.body;
-
-
-    dboperations.updateTenantDeviceToken(tenant_id, device_token)
-        .then(result => {
-            if (!result.success) {
-                return response.status(400).json(result);
-            }
-            response.json(result);
-        })
-        .catch(error => {
-            console.error("Error in /update-tenant-device-token:", error);
-            response.status(500).json({ success: false, message: "Internal server error" });
-        });
-});
-
-router.post('/get-tenant-by-reset-code', (request, response) => {
-    const email = request.body.email;
-    const reset_code = request.body.reset_code;
-
-
-    dboperations.getTenantByResetCode(email, reset_code)
+    dboperations.getUserNotifications(user_id, read_filter)
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -921,54 +686,16 @@ router.post('/get-tenant-by-reset-code', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /get-tenant-by-reset-code:", error);
+            console.error("Error in /get-user-upcoming-booking:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
-
-router.post('/update-tenant-password', (request, response) => {
-    const { tenant_id, password } = request.body;
-
-
-    dboperations.updateTenantPassword(tenant_id, password)
-        .then(result => {
-            if (!result.success) {
-                return response.status(400).json(result);
-            }
-            response.json(result);
-        })
-        .catch(error => {
-            console.error("Error in /update-tenant-password:", error);
-            response.status(500).json({ success: false, message: "Internal server error" });
-        });
-});
-
-
-router.post('/get-tenant-notifications', (request, response) => {
-    const tenant_id = request.body.tenant_id;
-    const read_filter = request.body.read_filter; // 0 - all, 1 - unread, 2 - read
-
-
-
-    dboperations.getTenantNotifications(tenant_id, read_filter)
-        .then(result => {
-            if (!result.success) {
-                return response.status(404).json(result);
-            }
-            response.json(result);
-        })
-        .catch(error => {
-            console.error("Error in /get-tenant-upcoming-booking:", error);
-            response.status(500).json({ success: false, message: "Internal server error" });
-        });
-});
-
-router.post('/get-tenant-building-request-by-id', (request, response) => {
+router.post('/get-user-object-request-by-id', (request, response) => {
     const id = request.body.id;
 
 
-    dboperations.getTenantBuildingRequestById(id)
+    dboperations.getUserObjectRequestById(id)
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -976,34 +703,17 @@ router.post('/get-tenant-building-request-by-id', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /get-tenant-building-request-by-id:", error);
-            response.status(500).json({ success: false, message: "Internal server error" });
-        });
-});
-
-router.post('/get-tenant-building-booking-by-id', (request, response) => {
-    const id = request.body.id;
-
-
-    dboperations.getTenantBuildingBookingById(id)
-        .then(result => {
-            if (!result.success) {
-                return response.status(404).json(result);
-            }
-            response.json(result);
-        })
-        .catch(error => {
-            console.error("Error in /get-tenant-building-booking-by-id:", error);
+            console.error("Error in /get-user-object-request-by-id:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
 
-router.post('/update-tenant-notification-status', (request, response) => {
-    const { id, status } = request.body;
+router.post('/update-user-notification-status', (request, response) => {
+    const { id, status } = request.query;
 
 
-    dboperations.updateTenantNotificationStatus(id, status)
+    dboperations.updateUserNotificationStatus(id, status)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -1011,16 +721,16 @@ router.post('/update-tenant-notification-status', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /update-tenant-notification-status:", error);
+            console.error("Error in /update-user-notification-status:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
-router.post('/get-tenant-building-announcemnts', (request, response) => {
-    const building_id = request.body.building_id;
+router.post('/get-user-object-announcemnts', (request, response) => {
+    const object_id = request.query.object_id;
 
 
-    dboperations.getTenantBuildingAnnouncemnts(building_id)
+    dboperations.getUserObjectAnnouncemnts(object_id)
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -1028,17 +738,17 @@ router.post('/get-tenant-building-announcemnts', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /get-tenant-building-announcemnts:", error);
+            console.error("Error in /get-user-object-announcemnts:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
 
-router.post('/get-tenant-building-announcement-by-id', (request, response) => {
-    const id = request.body.id;
+router.post('/get-user-object-announcement-by-id', (request, response) => {
+    const id = request.query.id;
 
 
-    dboperations.getTenantBuildingAnnouncementById(id)
+    dboperations.getUserObjectAnnouncementById(id)
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -1046,17 +756,17 @@ router.post('/get-tenant-building-announcement-by-id', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /get-tenant-building-announcement-by-id:", error);
+            console.error("Error in /get-user-object-announcement-by-id:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
 
-router.post('/delete-tenant-device-token', (request, response) => {
-    const { device_token } = request.body;
+router.post('/delete-user-device-token', (request, response) => {
+    const { device_token } = request.query;
 
 
-    dboperations.deleteTenantDeviceToken( device_token)
+    dboperations.deleteUserDeviceToken( device_token)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -1064,35 +774,19 @@ router.post('/delete-tenant-device-token', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /delete-tenant-device-token:", error);
+            console.error("Error in /delete-user-device-token:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
 
-router.post('/update-tenant-booking-reminders', (request, response) => {
-    const { tenant_id, val } = request.body;
 
 
-    dboperations.updateTenantBookingReminders(tenant_id, val)
-        .then(result => {
-            if (!result.success) {
-                return response.status(400).json(result);
-            }
-            response.json(result);
-        })
-        .catch(error => {
-            console.error("Error in /update-tenant-booking-reminders:", error);
-            response.status(500).json({ success: false, message: "Internal server error" });
-        });
-});
+router.post('/get-user-device-tokens', (request, response) => {
+    const user_id = request.query.user_id;
 
 
-router.post('/get-tenant-device-tokens', (request, response) => {
-    const tenant_id = request.body.tenant_id;
-
-
-    dboperations.getTenantDeviceTokens(tenant_id)
+    dboperations.getUserDeviceTokens(user_id)
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -1102,17 +796,17 @@ router.post('/get-tenant-device-tokens', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /get-tenant-device-tokens:", error);
+            console.error("Error in /get-user-device-tokens:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
 
-router.post('/update-tenant-language-code', (request, response) => {
-    const { tenant_id, lang_code } = request.body;
+router.post('/update-user-language-code', (request, response) => {
+    const { user_id, lang_code } = request.query;
 
 
-    dboperations.updateTenantLanguageCode(tenant_id, lang_code)
+    dboperations.updateUserLanguageCode(user_id, lang_code)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -1120,7 +814,7 @@ router.post('/update-tenant-language-code', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /update-tenant-language-code:", error);
+            console.error("Error in /update-user-language-code:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
@@ -1183,11 +877,11 @@ router.post('/create-tenant-building-post-report', (request, response) => {
         });
 });
 
-router.post('/delete-tenant-building-post', (request, response) => {
-    const { post_id } = request.body;
+router.post('/delete-user-object-post', (request, response) => {
+    const { post_id } = request.query;
 
 
-    dboperations.deleteTenantBuildingPost(post_id)
+    dboperations.deleteUserObjectPost(post_id)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -1195,59 +889,39 @@ router.post('/delete-tenant-building-post', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /delete-tenant-building-post:", error);
+            console.error("Error in /delete-user-object-post:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
-
-router.post('/delete-tenant-building-post-comment', (request, response) => {
-    const { comment_id } = request.body;
-
-
-    dboperations.deleteTenantBuildingPostComment( comment_id)
-        .then(result => {
-            if (!result.success) {
-                return response.status(400).json(result);
-            }
-            response.json(result);
-        })
-        .catch(error => {
-            console.error("Error in /delete-tenant-building-post-comment:", error);
-            response.status(500).json({ success: false, message: "Internal server error" });
-        });
-});
-
-
-router.post('/get-all-tenants-by-contract', (request, response) => {
-    const contract_id = request.body.contract_id;
+router.post('/get-all-users-by-object', (request, response) => {
+    const object_id = request.query.object_id;
 
 
 
-    dboperations.getTenantsByContractId(contract_id)
+    dboperations.getUsersByObjectId(object_id)
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
             }
 
-       //     console.log("get-all-tenants-by-contract", result);
 
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /get-all-tenants-by-contract:", error);
+            console.error("Error in /get-all-users-by-object:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
-router.post('/create-quick-new-tenant', (request, response) => {
-    const { first_name, last_name, email, building_id, created_by_id} = request.body;
+router.post('/create-quick-new-user', (request, response) => {
+    const { first_name, last_name, email, object_id, created_by_id} = request.body;
 
 
     //console.log(request.body);
 
 
-    dboperations.createQuickNewTenant(first_name, last_name, email, building_id, created_by_id)
+    dboperations.createQuickNewUser(first_name, last_name, email, object_id, created_by_id)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -1255,20 +929,20 @@ router.post('/create-quick-new-tenant', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /create-quick-new-tenant:", error);
+            console.error("Error in /create-quick-new-user:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
 
-router.post('/update-quick-tenant', (request, response) => {
-    const { first_name, last_name, building_id, tenant_id} = request.body;
+router.post('/update-quick-user', (request, response) => {
+    const { first_name, last_name, object_id, tenant_id} = request.body;
 
 
     //console.log(request.body);
 
 
-    dboperations.updateQuickTenant(first_name, last_name, building_id, tenant_id)
+    dboperations.updateQuickTenant(first_name, last_name, object_id, tenant_id)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -1276,34 +950,16 @@ router.post('/update-quick-tenant', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /update-quick-tenant:", error);
+            console.error("Error in /update-quick-user:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
-
-router.post('/update-tenant-contract-primary', (request, response) => {
-    const { contract_id, tenant_id } = request.body;
-
-
-    dboperations.updateTenantContractPrimary(contract_id, tenant_id)
-        .then(result => {
-            if (!result.success) {
-                return response.status(400).json(result);
-            }
-            response.json(result);
-        })
-        .catch(error => {
-            console.error("Error in /update-tenant-contract-primary:", error);
-            response.status(500).json({ success: false, message: "Internal server error" });
-        });
-});
-
-router.post('/get-tenant-all-requests', (request, response) => {
-    const contract_id = request.body.contract_id;
+router.post('/get-user-all-requests', (request, response) => {
+    const object_id = request.query.object_id;
 
 
-    dboperations.getTenantBuildingAllRequests(contract_id)
+    dboperations.getUserObjectAllRequests(contract_id)
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -1313,17 +969,17 @@ router.post('/get-tenant-all-requests', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /get-tenant-all-requests:", error);
+            console.error("Error in /get-user-all-requests:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
 
-router.post('/get-tenant-all-requests-by-tenant-id', (request, response) => {
-    const tenant_id = request.body.tenant_id;
+router.post('/get-user-all-requests-by-user-id', (request, response) => {
+    const user_id = request.query.user_id;
 
 
-    dboperations.getTenantBuildingAllRequestsByTenantId(tenant_id)
+    dboperations.getUserObjectAllRequestsByUserId(user_id)
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -1333,18 +989,18 @@ router.post('/get-tenant-all-requests-by-tenant-id', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /get-tenant-all-requests-by-tenant-id:", error);
+            console.error("Error in /get-user-all-requests-by-user-id:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
 
 
-router.post('/update-tenant-request-status', (request, response) => {
-    const { request_id, status_id } = request.body;
+router.post('/update-user-request-status', (request, response) => {
+    const { request_id, status_id } = request.query;
 
 
-    dboperations.updateTenantRequestStatus(request_id, status_id)
+    dboperations.updateUserRequestStatus(request_id, status_id)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -1352,18 +1008,18 @@ router.post('/update-tenant-request-status', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /update-tenant-request-status:", error);
+            console.error("Error in /update-user-request-status:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
 
-router.post('/get-all-tenants-by-building', (request, response) => {
-    const building_id = request.body.building_id;
+router.post('/get-all-Users-by-object', (request, response) => {
+    const object_id = request.query.object_id;
 
 
 
-    dboperations.getTenantsByBuildingId(building_id)
+    dboperations.getUsersByObjectId(object_id)
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -1373,17 +1029,17 @@ router.post('/get-all-tenants-by-building', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /get-all-tenants-by-building:", error);
+            console.error("Error in /get-all-users-by-object:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
 
-router.post('/delete-tenant-building-tenant', (request, response) => {
-    const { tenant_id, building_id } = request.body;
+router.post('/delete-user-object-user', (request, response) => {
+    const { user_id, object_id } = request.query;
 
 
-    dboperations.deleteTenantBuildingTenant(tenant_id, building_id)
+    dboperations.deleteUserObjectUser(user_id, object_id)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -1391,7 +1047,7 @@ router.post('/delete-tenant-building-tenant', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /delete-tenant-building-tenant:", error);
+            console.error("Error in /delete-user-object-user:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });

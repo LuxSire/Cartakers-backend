@@ -404,121 +404,6 @@ async function createUserObjectPostMedia(post_id, media_url) {
     }
 }
 
-async function createUserObjectPostComment(post_id, creator_id, creator_type, description, post_owner_id) {
-    try {
-        const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.create_object_post_comment(?,?,?,?)`,
-            [post_id, creator_id, creator_type, description]
-        );
-
-        const data = result[0] || [];
-
-
-     //  const item_id = data[0].id;
-
-     const item_id = post_id;
-
-
-
-
-
-
-
-        if (post_owner_id !== creator_id) {
-            // send push notification to post owner
-
-
-
-            const creatorResponse = await getTenantById(creator_id);
-
-            const creatorName = creatorResponse.data[0].display_name;
-
-            const [tokens] = await pool.execute(
-                `CALL ${process.env['DB_DATABASE']}.get_user_device_tokens(?)`,
-                [post_owner_id]
-            );
-
-            //  console.log('creatorName:', creatorName);
-            //    console.log('post_owner_id:', post_owner_id);
-            let notificationType = "comment";
-            let notificationTitle = "New Comment";
-            let message = `${creatorName} commented on your post: ${description}`;
-
-            //   Call stored procedure to create notifications
-            const [rows] = await pool.execute(
-                `CALL ${process.env['DB_DATABASE']}.create_user_notification(?,?,?,?)`,
-                [post_owner_id, 3, message, item_id]
-            );
-
-
-            for (const tokenData of tokens[0]) {
-                const { device_token, display_name, lang } = tokenData;
-
-
-                //  Step 5: Send API request to `/api/firebase/send-push-notification`
-                const pushPayload = {
-                    token: device_token,
-                    title: notificationTitle, // Ensure correct title
-                    body: message, // Ensure message is included
-                    type: notificationType, // Ensure type is correctly mapped
-                    data: { itemId: item_id }, // Ensure item_id is included
-                    receiverLangCode: lang // Ensure language is passed for translation
-                };
-
-                //    console.log(` Push notification request:`, pushPayload);
-
-                try {
-               
-                    if (process.env.NODE_ENV === 'development') {
-                        console.log('Push notification request DEV');
-
-                        const response = await axios.post(
-                            `${process.env.BASE_URL}api/firebase/send-push-notification`,
-                            pushPayload
-                        );
-                    } else {
-                        console.log('Push notification request PROD');
-
-                        const response = await axios.post(
-                            `${process.env.BASE_URL_PROD}api/firebase/send-push-notification`,
-                            pushPayload
-                        );
-
-                    }
-                 
-
-                    //   console.log(` Push notification request sent for ${display_name} (${lang})`);
-                } catch (err) {
-                    console.error(` Failed to send push notification for ${display_name} (${lang}):`, err.response?.data || err.message);
-                }
-            }
-
-
-
-        }
-
-
-
-
-
-        return {
-            success: data.length > 0,
-            message: "Object post comment created successfully",
-            data: data
-        };
-    } catch (error) {
-        console.error('Error in createUserObjectPostComment:', error);
-        return {
-            success: false,
-            message: "Failed to create object post comment due to a database error",
-            data: null
-        };
-    }
-}
-
-
-
-
 async function updateUserPersonalDetails(user_id, display_name, phone_number, country_code, profile_pic) {
     try {
         const [result] = await pool.execute(
@@ -597,7 +482,7 @@ async function updateUserResetPasswordCode(email, reset_code) {
 async function updateUserDeviceToken(user_id, device_token) {
     try {
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.update_User_device_token(?,?)`,
+            `CALL ${process.env['DB_DATABASE']}.update_user_device_token(?,?)`,
             [user_id, device_token]
         );
 
@@ -853,7 +738,7 @@ async function updateUserLanguageCode(user_id, lang_code) {
     try {
         const [result] = await pool.execute(
             `CALL ${process.env['DB_DATABASE']}.update_user_lang(?,?)`,
-            [tenant_id, lang_code]
+            [user_id, lang_code]
         );
 
         const data = result[0] || [];
@@ -873,131 +758,12 @@ async function updateUserLanguageCode(user_id, lang_code) {
 }
 
 
-async function createTenantContractNotificationAndSendPush(contract_id, type_id, message, item_id) {
+async function createUserNotificationAndSendPush(user_id, type_id, message, item_id) {
     try {
         //  Step 1: Call stored procedure to create notifications
         const [rows] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.create_tenant_contract_notification(?,?,?,?)`,
-            [contract_id, type_id, message, item_id]
-        );
-
-        const notifications = rows[0] || [];
-        if (notifications.length === 0) {
-            console.warn(`⚠️ No notifications created for contract ${contract_id}`);
-            return { success: false, message: "No notifications created", data: null };
-        }
-
-        //   console.log(` ${notifications.length} notifications created for contract ${contract_id}`);
-
-        // Step 2: Process each tenant notification
-        for (const notification of notifications) {
-            const tenant_id = notification.tenant_id;
-
-            //  Step 3: Get device tokens, display name, and language preference
-            const [tokens] = await pool.execute(
-                `CALL ${process.env['DB_DATABASE']}.get_tenant_device_tokens(?)`,
-                [tenant_id]
-            );
-
-            if (tokens.length === 0) {
-                console.warn(`⚠️ No device tokens found for tenant ${tenant_id}`);
-                continue;
-            }
-
-            //  console.log(`Found ${tokens.length} device tokens for tenant ${tenant_id}`);
-
-            //  Step 4: Get the type of notification
-            let notificationType = "";
-            let notificationTitle = "";
-            var typeId = parseInt(type_id);
-            switch (typeId) {
-                case 1:
-                    notificationType = "booking";
-                    notificationTitle = "Booking Update";
-                    break;
-                case 2:
-                    notificationType = "request";
-                    notificationTitle = "Request Update";
-                    break;
-                case 3:
-                    notificationType = "comment";
-                    notificationTitle = "New Comment";
-                    break;
-                case 4:
-                    notificationType = "announcement";
-                    notificationTitle = "New Announcement";
-                    break;
-                case 5:
-                    notificationType = "parcel";
-                    notificationTitle = "Parcel Update";
-                    break;
-                default:
-                    notificationType = "general";
-                    notificationTitle = "New Notification";
-                    break;
-            }
-
-
-
-            for (const tokenData of tokens[0]) {
-                const { device_token, display_name, lang } = tokenData;
-
-
-                //  Step 5: Send API request to `/api/firebase/send-push-notification`
-                const pushPayload = {
-                    token: device_token,
-                    title: notificationTitle, // Ensure correct title
-                    body: message, // Ensure message is included
-                    type: notificationType, // Ensure type is correctly mapped
-                    data: { itemId: item_id }, // Ensure item_id is included
-                    receiverLangCode: lang // Ensure language is passed for translation
-                };
-
-                //    console.log(` Push notification request:`, pushPayload);
-
-                try {
-
-                    // check if it is in dev mode or production mode
-
-                    if (process.env.NODE_ENV === 'development') {
-                        console.log('Push notification request DEV');
-
-                        const response = await axios.post(
-                            `${process.env.BASE_URL}api/firebase/send-push-notification`,
-                            pushPayload
-                        );
-                    } else {
-                        console.log('Push notification request PROD');
-
-                        const response = await axios.post(
-                            `${process.env.BASE_URL_PROD}api/firebase/send-push-notification`,
-                            pushPayload
-                        );
-
-                    }
-                 
-                    //     console.log(` Push notification request sent for ${display_name} (${lang})`);
-                } catch (err) {
-                    console.error(` Failed to send push notification for ${display_name} (${lang}):`, err.response?.data || err.message);
-                }
-            }
-        }
-
-        return { success: true, message: "Notifications created and push sent", data: notifications };
-    } catch (error) {
-        console.error(" Error in createTenantContractNotificationAndSendPush:", error);
-        return { success: false, message: "Database or push notification error", data: null };
-    }
-}
-
-
-
-async function createTenantNotificationAndSendPush(tenant_id, type_id, message, item_id) {
-    try {
-        //  Step 1: Call stored procedure to create notifications
-        const [rows] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.create_tenant_notification(?,?,?,?)`,
-            [tenant_id, type_id, message, item_id]
+            `CALL ${process.env['DB_DATABASE']}.create_user_notification(?,?,?,?)`,
+            [user_id, type_id, message, item_id]
         );
 
         const notifications = rows[0] || [];
@@ -1010,16 +776,16 @@ async function createTenantNotificationAndSendPush(tenant_id, type_id, message, 
 
         //  Step 2: Process each tenant notification
         for (const notification of notifications) {
-            const tenant_id = notification.tenant_id;
+            const user_id = notification.tenant_id;
 
             //  Step 3: Get device tokens, display name, and language preference
             const [tokens] = await pool.execute(
-                `CALL ${process.env['DB_DATABASE']}.get_tenant_device_tokens(?)`,
-                [tenant_id]
+                `CALL ${process.env['DB_DATABASE']}.get_user_device_tokens(?)`,
+                [user_id]
             );
 
             if (tokens.length === 0) {
-                console.warn(`⚠️ No device tokens found for tenant ${tenant_id}`);
+                console.warn(`⚠️ No device tokens found for tenant ${user_id}`);
                 continue;
             }
 
@@ -1102,85 +868,34 @@ async function createTenantNotificationAndSendPush(tenant_id, type_id, message, 
 
         return { success: true, message: "Notifications created and push sent", data: notifications };
     } catch (error) {
-        console.error(" Error in createTenantNotificationAndSendPush:", error);
+        console.error(" Error in createUserNotificationAndSendPush:", error);
         return { success: false, message: "Database or push notification error", data: null };
     }
 }
 
 
-async function createTenantBuildingPostReport(post_id, building_id, reported_by_id, reason, additional_comments) {
+async function deleteUserObjectPost(post_id) {
     try {
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.create_building_post_report(?,?,?,?,?)`,
-            [post_id, building_id, reported_by_id, reason, additional_comments]
-        );
-
-        const data = result[0] || [];
-        return {
-            success: data.length > 0,
-            message: "Building post report successfully",
-            data: data
-        };
-    } catch (error) {
-        console.error('Error in createTenantBuildingPostReport:', error);
-        return {
-            success: false,
-            message: "Failed to create building post report due to a database error",
-            data: null
-        };
-    }
-}
-
-
-async function deleteTenantBuildingPost(post_id) {
-    try {
-        const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.delete_tenant_building_post(?)`,
+            `CALL ${process.env['DB_DATABASE']}.delete_user_object_post(?)`,
             [post_id]
         );
 
         const data = result[0] || [];
         return {
             success: data.length > 0,
-            message: "Building post deleted successfully",
+            message: "Object post deleted successfully",
             data: data
         };
     } catch (error) {
-        console.error('Error in deleteTenantBuildingPost:', error);
+        console.error('Error in deleteUserObjectPost:', error);
         return {
             success: false,
-            message: "Failed to delete building post due to a database error",
+            message: "Failed to delete object post due to a database error",
             data: null
         };
     }
 }
-
-
-async function deleteTenantBuildingPostComment(comment_id) {
-    try {
-        const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.delete_tenant_building_post_comment(?)`,
-            [comment_id]
-        );
-
-        const data = result[0] || [];
-        return {
-            success: data.length > 0,
-            message: "Building post comment deleted successfully",
-            data: data
-        };
-    } catch (error) {
-        console.error('Error in deleteTenantBuildingPostComment:', error);
-        return {
-            success: false,
-            message: "Failed to delete building post comment due to a database error",
-            data: null
-        };
-    }
-}
-
-
-
 
 async function getUsersbyObjectId(object_id) {
     try {
@@ -1210,13 +925,13 @@ async function getUsersbyObjectId(object_id) {
 }
 
 
-async function createQuickNewTenant(first_name, last_name, email, building_id, created_by_id) {
+async function createQuickNewUser(first_name, last_name, email, object_id, created_by_id) {
     try {
 
 
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.create_quick_new_tenant(?,?,?,?,?)`,
-            [first_name, last_name, email, building_id, created_by_id]
+            `CALL ${process.env['DB_DATABASE']}.create_quick_new_user(?,?,?,?,?)`,
+            [first_name, last_name, email, object_id, created_by_id]
         );
         
 
@@ -1229,7 +944,7 @@ async function createQuickNewTenant(first_name, last_name, email, building_id, c
             if(data[0]['status']=='exists'){
                 return {
                     success: true,
-                    message: "Tenant already exists",
+                    message: "User already exists",
                     status: 0,
                     data: data
                 };
@@ -1237,7 +952,7 @@ async function createQuickNewTenant(first_name, last_name, email, building_id, c
             if(data[0]['status']=='created'){
                 return {
                     success: true,
-                    message: "Quick new tenant created successfully",
+                    message: "Quick new user created successfully",
                     status: 1,
                     data: data
                 };
@@ -1249,66 +964,42 @@ async function createQuickNewTenant(first_name, last_name, email, building_id, c
 
   
     } catch (error) {
-        console.error('Error in createQuickNewTenant:', error);
+        console.error('Error in createQuickNewUser:', error);
         return {
             success: false,
-            message: "Failed to create quick new tenant due to a database error",
+            message: "Failed to create quick new user due to a database error",
             status: 2,
             data: null
         };
     }
 }
-async function updateQuickTenant(first_name, last_name, building_id, tenant_id) {
+async function updateQuickUser(first_name, last_name, object_id, user_id) {
     try {
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.update_quick_tenant(?,?,?,?)`,
-            [first_name, last_name, building_id, tenant_id]
+            `CALL ${process.env['DB_DATABASE']}.update_quick_user(?,?,?,?)`,
+            [first_name, last_name, object_id, user_id]
         );
 
         const data = result[0] || [];
         return {
             success: data.length > 0,
-            message: "Tenant quick updated successfully",
+            message: "User quick updated successfully",
             data: data
         };
     } catch (error) {
-        console.error('Error in updateQuickTenant:', error);
+        console.error('Error in updateQuickUser:', error);
         return {
             success: false,
-            message: "Failed to update tenant quickdue to a database error",
+            message: "Failed to update user quickdue to a database error",
             data: null
         };
     }
 }
 
-
-async function updateTenantContractPrimary(contract_id, tenant_id) {
+async function getUserObjectAllRequests(object_id) {
     try {
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.update_tenant_contract_primary(?,?)`,
-            [contract_id, tenant_id]
-        );
-
-        const data = result[0] || [];
-        return {
-            success: data.length > 0,
-            message: "Tenant contract primary updated successfully",
-            data: data
-        };
-    } catch (error) {
-        console.error('Error in updateTenantContractPrimary:', error);
-        return {
-            success: false,
-            message: "Failed to update tenant contract primary due to a database error",
-            data: null
-        };
-    }
-}
-
-async function getTenantBuildingAllRequests(contract_id) {
-    try {
-        const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.get_tenant_building_requests(?)`,
+            `CALL ${process.env['DB_DATABASE']}.get_user_object_requests(?)`,
             [contract_id]
         );
 
@@ -1321,20 +1012,20 @@ async function getTenantBuildingAllRequests(contract_id) {
             data: requests
         };
     } catch (error) {
-        console.error('Error in getTenantBuildingAllRequests:', error);
+        console.error('Error in getUserObjectAllRequests:', error);
         return {
             success: false,
-            message: "Failed to retrieve all tenant requests due to a database error",
+            message: "Failed to retrieve all user requests due to a database error",
             data: []
         };
     }
 }
 
 
-async function getTenantBuildingAllRequestsByTenantId(tenant_id) {
+async function getUserObjectAllRequestsByUserId(user_id) {
     try {
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.get_tenant_building_requests_by_tenant_id(?)`,
+            `CALL ${process.env['DB_DATABASE']}.get_user_object_requests_by_user_id(?)`,
             [tenant_id]
         );
 
@@ -1343,14 +1034,14 @@ async function getTenantBuildingAllRequestsByTenantId(tenant_id) {
 
         return {
             success: requests.length > 0 ? true : false,
-            message: requests.length > 0 ? "Tenant all requests retrieved by tenant id successfully" : "No requests found",
+            message: requests.length > 0 ? "User all requests retrieved by tenant id successfully" : "No requests found",
             data: requests
         };
     } catch (error) {
-        console.error('Error in getTenantBuildingAllRequestsByTenantId:', error);
+        console.error('Error in getUserObjectAllRequestsByUserId:', error);
         return {
             success: false,
-            message: "Failed to retrieve all tenant requests by tenant id due to a database error",
+            message: "Failed to retrieve all user requests by user id due to a database error",
             data: []
         };
     }
@@ -1395,7 +1086,6 @@ module.exports = {
     createUserObjectRequestLog: createUserObjectRequestLog,
     createUserObjectPost: createUserObjectPost,
     createUserObjectPostMedia: createUserObjectPostMedia,
-    createUserObjectPostComment: createUserObjectPostComment,
     getUserById: getUserById,
     updateUserPersonalDetails: updateUserPersonalDetails,
     getUserObjectDocs: getUserObjectDocs,
@@ -1411,21 +1101,17 @@ module.exports = {
     deleteUserDeviceToken: deleteUserDeviceToken,
     getUserDeviceTokens: getUserDeviceTokens,
     updateUserLanguageCode: updateUserLanguageCode,
-    createTenantNotificationAndSendPush: createTenantNotificationAndSendPush,
-    createTenantContractNotificationAndSendPush: createTenantContractNotificationAndSendPush,
-    createTenantBuildingPostReport: createTenantBuildingPostReport,
-    deleteTenantBuildingPost: deleteTenantBuildingPost,
-    deleteTenantBuildingPostComment: deleteTenantBuildingPostComment,
+    createUserNotificationAndSendPush: createUserNotificationAndSendPush,
+    deleteUserObjectPost: deleteUserObjectPost,
     validateCompanyInvitationToken: validateCompanyInvitationToken,
     registerCompany: registerCompany,
     getCompanyByEmail: getCompanyByEmail,
     getCompanyById: getCompanyById,
     getUsersbyObjectId: getUsersbyObjectId,
-    createQuickNewTenant: createQuickNewTenant,
-    updateTenantContractPrimary: updateTenantContractPrimary,
-    getTenantBuildingAllRequests: getTenantBuildingAllRequests,
+    createQuickNewUser: createQuickNewUser,
+    getUserObjectAllRequests: getUserObjectAllRequests,
     updateUserRequestStatus: updateUserRequestStatus,
-    getTenantBuildingAllRequestsByTenantId: getTenantBuildingAllRequestsByTenantId,
-    updateQuickTenant: updateQuickTenant
+    getUserObjectAllRequestsByUserId: getUserObjectAllRequestsByUserId,
+    updateQuickUser: updateQuickUser
 }
 
