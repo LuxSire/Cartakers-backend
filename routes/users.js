@@ -403,7 +403,7 @@ router.post('/get-company-by-id', (request, response) => {
 
 
 // Get Tenant Upcoming Booking
-router.post('/get-tenant-upcoming-booking', (request, response) => {
+router.post('/get-user-upcoming-booking', (request, response) => {
     const contract_id = request.body.contract_id;
 
 
@@ -416,17 +416,17 @@ router.post('/get-tenant-upcoming-booking', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /get-tenant-upcoming-booking:", error);
+            console.error("Error in /get-user-upcoming-booking:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
-// Create Tenant Building Request
-router.post('/create-tenant-building-request', (request, response) => {
-    const { request_id, tenant_id, unit_id, description, building_id, agency_id, contract_id } = request.body;
+// Create User Object Request
+router.post('/create-user-object-request', (request, response) => {
+    const { request_id, user_id, unit_id, description, object_id, agency_id, contract_id } = request.body;
 
 
-    dboperations.createTenantBuildingRequest(request_id, tenant_id, unit_id, description, building_id, 
+    dboperations.createUserObjectRequest(request_id, user_id, unit_id, description, object_id, 
         agency_id, contract_id)
         .then(result => {
             if (!result.success) {
@@ -435,17 +435,17 @@ router.post('/create-tenant-building-request', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /create-tenant-building-request:", error);
+            console.error("Error in /create-user-object-request:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
-// Create Tenant Building Request Log
-router.post('/create-tenant-building-request-log', (request, response) => {
+// Create User Object Request Log
+router.post('/create-user-object-request-log', (request, response) => {
     const { request_id, status, description, processed_by_id, processed_by_type } = request.body;
 
 
-    dboperations.createTenantBuildingRequestLog(request_id, status, description, processed_by_id, processed_by_type)
+    dboperations.createUserObjectRequestLog(request_id, status, description, processed_by_id, processed_by_type)
         .then(result => {
 
            // console.log(result);
@@ -457,7 +457,7 @@ router.post('/create-tenant-building-request-log', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /create-tenant-building-request-log:", error);
+            console.error("Error in /create-user_object-request-log:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
@@ -484,11 +484,11 @@ router.post('/create-tenant-building-request-media', (request, response) => {
 });
 
 // Get Tenant Building Requests
-router.post('/get-tenant-building-requests', (request, response) => {
+router.post('/get-user-object-requests', (request, response) => {
     const contract_id = request.body.contract_id;
 
 
-    dboperations.getTenantBuildingRequests(contract_id)
+    dboperations.getUserObjectRequests(contract_id)
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -496,7 +496,7 @@ router.post('/get-tenant-building-requests', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /get-tenant-building-requests:", error);
+            console.error("Error in /get-user-object-requests:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
