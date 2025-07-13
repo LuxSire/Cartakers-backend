@@ -407,7 +407,7 @@ console.log('NODE_ENV:', process.env.NODE_ENV); //  Debugging
 
 // Start the server
 const port = process.env.PORT || 8090;
-app.listen(port, () => console.log(`XM Server v.0.0.1 running on port ${port}`));
+app.listen(port, () => console.log(`XM Server v.1.0.1 running on port ${port}`));
 
 
 //testTranslation(); // Test the translation service
