@@ -178,7 +178,50 @@ async function getAllObjects() {
         };
     }
 }
+async function getAllZoning() {
+    try {
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.get_all_zoning()`
+        );
 
+        const buildings = result[0] || []; // Ensure valid data
+
+        return {
+            success: buildings.length > 0,
+            message: buildings.length > 0 ? "Zoning retrieved successfully" : "No zoning found",
+            data: buildings
+        };
+    } catch (error) {
+        console.error('Error in getAllZoning:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve  zoning types due to a database error",
+            data: []
+        };
+    }
+}
+async function getAllTypes() {
+    try {
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.get_all_types()`
+        );
+
+        const buildings = result[0] || []; // Ensure valid data
+
+        return {
+            success: buildings.length > 0,
+            message: buildings.length > 0 ? "Types retrieved successfully" : "No types found",
+            data: buildings
+        };
+    } catch (error) {
+        console.error('Error in getAllTypes:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve   types due to a database error",
+            data: []
+        };
+    }
+}
 async function updateObjectDetails(object_id, name, street, object_number, zip_code, location, image_url) {
     try {
 
@@ -201,6 +244,32 @@ async function updateObjectDetails(object_id, name, street, object_number, zip_c
         return {
             success: false,
             message: "Failed to update object details due to a database error",
+            data: null
+        };
+    }
+}
+async function updateObjectField(object_id, table, field,value) {
+    try {
+
+
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.update_object_field(?,?,?,?)`,
+            [object_id, table, field,value]
+        );
+
+        const data = result[0] || [];
+
+        console.log(data);
+        return {
+            success: data.length > 0,
+            message: "Object field updated successfully",
+            data: data
+        };
+    } catch (error) {
+        console.error('Error in updateObjectField:', error);
+        return {
+            success: false,
+            message: "Failed to update object field due to a database error",
             data: null
         };
     }
@@ -258,33 +327,6 @@ async function deleteUsersFromObject(object_id) {
 }
 
 
-
-async function createZone(object_id, zone_name) {
-    try {
-
-
-        const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.create_zone(?,?)`,
-            [object_id, zone_name]
-        );
-
-        const object = result[0] || []; // Ensure valid data
-
-        return {
-            success: buildings.length > 0,
-            message: buildings.length > 0 ? "Created new zone successfully" : "No  zone created",
-            data: buildings
-        };
-    } catch (error) {
-        console.error('Error in create Zone:', error);
-        return {
-            success: false,
-            message: "Failed to retrieve of new  zone due to a database error",
-            data: []
-        };
-    }
-}
-
 async function removeUserFromObject(object_id, user_id) {
     try {
 
@@ -338,7 +380,59 @@ async function createObjectMedia(object_id, doc_url, file_name, creator_id, crea
         };
     }
 }
+async function createQuickObject(name, address, company) {
+    try {
 
+
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.create_quick_object(name,address,company)`,
+            [name, address, company]
+        );
+
+        const data = result[0] || [];
+
+    //    console.log(data);
+        return {
+            success: data.length > 0,
+            message: "New object  created successfully",
+            data: data
+        };
+    } catch (error) {
+        console.error('Error in createQuickObject:', error);
+        return {
+            success: false,
+            message: "Failed to create new object  due to a database error",
+            data: null
+        };
+    }
+}
+
+async function createObject(json) {
+    try {
+
+
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.create_object(?)`,
+            [json]
+        );
+
+        const data = result[0] || [];
+
+    //    console.log(data);
+        return {
+            success: data.length > 0,
+            message: "New object  created successfully",
+            data: data
+        };
+    } catch (error) {
+        console.error('Error in createObjectt:', error);
+        return {
+            success: false,
+            message: "Failed to create new object  due to a database error",
+            data: null
+        };
+    }
+}
 
 async function deleteDocumentById(document_id) {
     try {
@@ -472,9 +566,11 @@ module.exports = {
     getObjectById: getObjectById,
     getObjectsByCompanyId: getObjectsByCompanyId,
     getAllObjects: getAllObjects,
+    getAllZoning: getAllZoning,
+    getAllTypes: getAllTypes,
     updateObjectDetails: updateObjectDetails,
+    updateObjectField: updateObjectField,
     deleteUsersFromObject: deleteUsersFromObject,
-    createZone: createZone,
     removeUserFromObject: removeUserFromObject,
     createObjectMedia: createObjectMedia,
     deleteDocumentById: deleteDocumentById,
@@ -482,7 +578,9 @@ module.exports = {
     getAllObjectPermissions: getAllObjectPermissions,
     getObjectRecentBookings: getObjectRecentBookings,
     getObjectAllRequests: getObjectAllRequests,
-    addUserToObject: addUserToObject
+    addUserToObject: addUserToObject,
+    createObject: createObject,
+    createQuickObject: createQuickObject
 }
 
 

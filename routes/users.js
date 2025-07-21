@@ -292,7 +292,7 @@ router.post('/register-company', (request, response) => {
     //console.log(agent);
 
 
-    dboperations.registerCompany(company)
+    dboperations.RegisterCompany(company)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -363,7 +363,40 @@ router.post('/get-company-by-email', (request, response) => {
         });
 });
 
+router.post('/get-all-users', (request, response) => {
+    
 
+
+
+    dboperations.getAllUsers()
+        .then(result => {
+            if (!result.success) {
+                return response.status(404).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /get-all-users:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
+router.post('/get-all-companies', (request, response) => {
+    
+
+
+
+    dboperations.getAllCompanies()
+        .then(result => {
+            if (!result.success) {
+                return response.status(404).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /get-all-companies:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
 router.post('/get-user-by-id', (request, response) => {
     const id = request.query.id;
 
@@ -542,6 +575,22 @@ router.post('/create-user-object-post-media', (request, response) => {
         });
 });
 
+router.post('/update-user-field', (request, response) => {
+    const { user_id, table, field,value } = request.body;
+
+
+    dboperations.updateUserField(user_id, table, field,value)
+        .then(result => {
+            if (!result.success) {
+                return response.status(400).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /update-user-field:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
 
 router.post('/update-user-personal-details', (request, response) => {
     const { user_id, display_name, phone_number, country_code, profile_pic } = request.body;

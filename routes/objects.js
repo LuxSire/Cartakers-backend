@@ -140,6 +140,33 @@ router.post('/get-all-objects', (request, response) => {
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
+router.post('/get-all-zoning', (request, response) => {
+    dboperations.getAllZoning()
+        .then(result => {
+            if (!result.success) {
+                return response.status(404).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /get-all-zoning:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
+router.post('/get-all-types', (request, response) => {
+    dboperations.getAllTypes()
+        .then(result => {
+            if (!result.success) {
+                return response.status(404).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /get-all-types:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
+
 router.post('/update-object-details', (request, response) => {
     const { object_id, name, street,  zip_code, location, image_url } = request.body;
 
@@ -153,6 +180,22 @@ router.post('/update-object-details', (request, response) => {
         })
         .catch(error => {
             console.error("Error in /update-object-details:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
+router.post('/update-object-field', (request, response) => {
+    const { object_id, table, field,value } = request.body;
+
+
+    dboperations.updateObjectField(object_id, table, field,value)
+        .then(result => {
+            if (!result.success) {
+                return response.status(400).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /update-object-field:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
@@ -215,6 +258,41 @@ router.post('/remove-user-from-object', (request, response) => {
         });
 });
 
+router.post('/create-quick-object', (request, response) => {
+    var {  name, address,  company} = request.query;
+
+
+    dboperations.createQuickObject(name, address,  company)
+        .then(result => {
+            if (!result.success) {
+                return response.status(400).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /create-quick-object:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
+
+router.post('/create-object', (request, response) => {
+    var { json} = request.body;
+
+    if (!json) {
+        return response.status(400).json({ success: false, message: "Missing jsonfile" });
+    }
+    dboperations.createObject(json)
+        .then(result => {
+            if (!result.success) {
+                return response.status(400).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /create-object:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
 
 router.post('/create-object-media', (request, response) => {
     var {  object_id, doc_url,  file_name, creator_id, creator_type} = request.query;

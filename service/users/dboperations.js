@@ -85,7 +85,7 @@ async function registerUser(user) {
     }
 }
 
-async function registerCompany(company) {
+async function RegisterCompany(company) {
     try {
 
       //  console.log('registerAgent:', agent);
@@ -229,6 +229,32 @@ async function getUserById(id) {
     }
 }
 
+async function updateUserField(user_id, table, field,value) {
+    try {
+
+
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.update_user_field(?,?,?,?)`,
+            [user_id, table, field,value]
+        );
+
+        const data = result[0] || [];
+
+        console.log(data);
+        return {
+            success: data.length > 0,
+            message: "User field updated successfully",
+            data: data
+        };
+    } catch (error) {
+        console.error('Error in updateUserField:', error);
+        return {
+            success: false,
+            message: "Failed to update user field due to a database error",
+            data: null
+        };
+    }
+}
 
 async function getCompanyById(id) {
     try {
@@ -995,7 +1021,50 @@ async function updateQuickUser(first_name, last_name, object_id, user_id) {
         };
     }
 }
+async function getAllUsers() {
+    try {
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.get_all_users()`
+        );
 
+        const buildings = result[0] || []; // Ensure valid data
+
+        return {
+            success: buildings.length > 0,
+            message: buildings.length > 0 ? "Users retrieved successfully" : "No users found",
+            data: buildings
+        };
+    } catch (error) {
+        console.error('Error in getAllUsers:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve  objects types due to a database error",
+            data: []
+        };
+    }
+}
+async function getAllCompanies() {
+    try {
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.get_all_companies()`
+        );
+
+        const buildings = result[0] || []; // Ensure valid data
+
+        return {
+            success: buildings.length > 0,
+            message: buildings.length > 0 ? "Companies retrieved successfully" : "No companies found",
+            data: buildings
+        };
+    } catch (error) {
+        console.error('Error in getAllCompanies:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve  companies due to a database error",
+            data: []
+        };
+    }
+}
 async function getUserObjectAllRequests(object_id) {
     try {
         const [result] = await pool.execute(
@@ -1104,9 +1173,12 @@ module.exports = {
     createUserNotificationAndSendPush: createUserNotificationAndSendPush,
     deleteUserObjectPost: deleteUserObjectPost,
     validateCompanyInvitationToken: validateCompanyInvitationToken,
-    registerCompany: registerCompany,
+    RegisterCompany: RegisterCompany,
     getCompanyByEmail: getCompanyByEmail,
     getCompanyById: getCompanyById,
+    getAllUsers: getAllUsers,
+    updateUserField: updateUserField,
+    getAllCompanies: getAllCompanies,
     getUsersbyObjectId: getUsersbyObjectId,
     createQuickNewUser: createQuickNewUser,
     getUserObjectAllRequests: getUserObjectAllRequests,
