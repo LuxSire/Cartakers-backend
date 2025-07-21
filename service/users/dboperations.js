@@ -144,7 +144,7 @@ async function loginUser(user) {
 async function getUserByEmail(email) {
     try {
 
-         //console.log('getTenantByEmail:', email);
+         //console.log('getUserByEmail:', email);
 
         const [result] = await pool.execute(
             `CALL ${process.env['DB_DATABASE']}.get_user_by_email(?)`,
@@ -155,7 +155,6 @@ async function getUserByEmail(email) {
 
         const data = result[0] || [];
 
-       // console.log('getTenantByEmail:', data);
         return {
             success: data.length > 0,
             message: data.length > 0 ? "User found" : "User not found",
@@ -174,7 +173,7 @@ async function getUserByEmail(email) {
 async function getCompanyByEmail(email) {
     try {
 
-         //console.log('getTenantByEmail:', email);
+         //console.log('getCompanyByEmail:', email);
 
         const [result] = await pool.execute(
             `CALL ${process.env['DB_DATABASE']}.get_company_by_email(?)`,
@@ -205,7 +204,7 @@ async function getCompanyByEmail(email) {
 async function getUserById(id) {
     try {
 
-        // console.log('getTenantById:', id);
+        // console.log('getUserById:', id);
 
 
         const [result] = await pool.execute(
@@ -304,12 +303,12 @@ async function getUserUpcomingBooking(contract_id) {
     }
 }
 
-async function createUserObjectRequest(request_id, tenant_id, unit_id, description,
-    building_id, agency_id, contract_id) {
+async function createUserObjectRequest(request_id, user_id, unit_id, description,
+    building_id, company_id, contract_id) {
     try {
         const [result] = await pool.execute(
             `CALL ${process.env['DB_DATABASE']}.create_user_object_request(?,?,?,?,?,?,?)`,
-            [request_id, tenant_id, unit_id, description, building_id, agency_id, contract_id]
+            [request_id, user_id, unit_id, description, building_id, company_id, contract_id]
         );
 
         const data = result[0] || [];
@@ -382,7 +381,6 @@ async function getUserObjectRequests(object_id) {
 async function createUserObjectPost(object_id, creator_id, title, isReceivePrivateMessage, description, creator_type) {
     try {
 
-       // console.log('createTenantBuildingPost:', building_id, creator_id, title, isReceivePrivateMessage, description, creator_type);
 
         const [result] = await pool.execute(
             `CALL ${process.env['DB_DATABASE']}.create_object_post(?,?,?,?,?,?)`,
@@ -474,7 +472,7 @@ async function getUserObjectDocs(object_id) {
         console.error('Error in getUserObjectDocs:', error);
         return {
             success: false,
-            message: "Failed to retrieve all tenant docs due to a database error",
+            message: "Failed to retrieve all User docs due to a database error",
             data: []
         };
     }
@@ -731,11 +729,11 @@ async function deleteUserDeviceToken(device_token) {
 }
 
 
-async function getUserDeviceTokens(tenant_id) {
+async function getUserDeviceTokens(user_id) {
     try {
         const [result] = await pool.execute(
             `CALL ${process.env['DB_DATABASE']}.get_user_device_tokens(?)`,
-            [tenant_id]
+            [user_id]
         );
 
         // Extract only the first element of the result, which contains the actual request data
@@ -794,15 +792,15 @@ async function createUserNotificationAndSendPush(user_id, type_id, message, item
 
         const notifications = rows[0] || [];
         if (notifications.length === 0) {
-            console.warn(`⚠️ No notifications created for contract ${tenant_id}`);
+            console.warn(`⚠️ No notifications created for contract ${user_id}`);
             return { success: false, message: "No notifications created", data: null };
         }
         //
-        //     console.log(` ${notifications.length} notifications created for tenant_id ${tenant_id}`);
+        //     console.log(` ${notifications.length} notifications created for user_id ${user_id}`);
 
-        //  Step 2: Process each tenant notification
+        //  Step 2: Process each user notification
         for (const notification of notifications) {
-            const user_id = notification.tenant_id;
+            const user_id = notification.user_id;
 
             //  Step 3: Get device tokens, display name, and language preference
             const [tokens] = await pool.execute(
@@ -811,11 +809,11 @@ async function createUserNotificationAndSendPush(user_id, type_id, message, item
             );
 
             if (tokens.length === 0) {
-                console.warn(`⚠️ No device tokens found for tenant ${user_id}`);
+                console.warn(`⚠️ No device tokens found for user ${user_id}`);
                 continue;
             }
 
-            //   console.log(` Found ${tokens.length} device tokens for tenant ${tenant_id}`);
+            //   console.log(` Found ${tokens.length} device tokens for user ${user_id}`);
 
             //  Step 4: Get the type of notification
             let notificationType = "";
@@ -964,7 +962,6 @@ async function createQuickNewUser(first_name, last_name, email, object_id, creat
         const data = result[0] || [];
 
 
-      //  console.log('createQuickNewTenant:', data);
  
 
             if(data[0]['status']=='exists'){
@@ -1077,7 +1074,7 @@ async function getUserObjectAllRequests(object_id) {
 
         return {
             success: requests.length > 0 ? true : false,
-            message: requests.length > 0 ? "Tenant all requests retrieved successfully" : "No requests found",
+            message: requests.length > 0 ? "User all requests retrieved successfully" : "No requests found",
             data: requests
         };
     } catch (error) {
@@ -1095,7 +1092,7 @@ async function getUserObjectAllRequestsByUserId(user_id) {
     try {
         const [result] = await pool.execute(
             `CALL ${process.env['DB_DATABASE']}.get_user_object_requests_by_user_id(?)`,
-            [tenant_id]
+            [user_id]
         );
 
         // Extract only the first element of the result, which contains the actual request data
@@ -1103,7 +1100,7 @@ async function getUserObjectAllRequestsByUserId(user_id) {
 
         return {
             success: requests.length > 0 ? true : false,
-            message: requests.length > 0 ? "User all requests retrieved by tenant id successfully" : "No requests found",
+            message: requests.length > 0 ? "User all requests retrieved by user id successfully" : "No requests found",
             data: requests
         };
     } catch (error) {

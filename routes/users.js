@@ -231,7 +231,7 @@ async function generateSasToken(containerName, blobName) {
   ////////// start Flutter calls from here
 
 
-// Validate Tenant Invitation Token
+// Validate User Invitation Token
 router.post('/validate-user-invitation-token', (request, response) => {
     const token = request.query.token;
 
@@ -323,7 +323,7 @@ router.post('/login-user', (request, response) => {
         });
 });
 
-// Get Tenant by Email
+// Get User by Email
 router.post('/get-user-by-email', (request, response) => {
     const email = request.query.email;
 
@@ -435,13 +435,13 @@ router.post('/get-company-by-id', (request, response) => {
 });
 
 
-// Get Tenant Upcoming Booking
+// Get User Upcoming Booking
 router.post('/get-user-upcoming-booking', (request, response) => {
     const contract_id = request.query.contract_id;
 
 
 
-    dboperations.getTenantUpcomingBooking(contract_id)
+    dboperations.getUserUpcomingBooking(contract_id)
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -526,7 +526,7 @@ router.post('/update-user-object-request-status', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /update-tenant-building-request-status:", error);
+            console.error("Error in /update-user-building-request-status:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
@@ -576,7 +576,7 @@ router.post('/create-user-object-post-media', (request, response) => {
 });
 
 router.post('/update-user-field', (request, response) => {
-    const { user_id, table, field,value } = request.body;
+    const { user_id, table, field,value } = request.query;
 
 
     dboperations.updateUserField(user_id, table, field,value)
@@ -591,6 +591,13 @@ router.post('/update-user-field', (request, response) => {
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
+/*
+{
+  "json": "{ \"user_id\": 1, \"value\": \"123 Main St\",  \"table\": \"Companies\",\"Field\":\"address\"  }"
+}
+   
+
+*/
 
 router.post('/update-user-personal-details', (request, response) => {
     const { user_id, display_name, phone_number, country_code, profile_pic } = request.body;
@@ -671,7 +678,7 @@ router.post('/update-user-device-token', (request, response) => {
     const { user_id, device_token } = request.query;
 
 
-    dboperations.updateUserDeviceToken(tenant_id, device_token)
+    dboperations.updateUserDeviceToken(user_id, device_token)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -870,12 +877,12 @@ router.post('/update-user-language-code', (request, response) => {
 
 
 
-router.post('/create-tenant-contract-notification-and-send-push', (request, response) => {
+router.post('/create-usercontract-notification-and-send-push', (request, response) => {
     const { contract_id, type_id, message, item_id} = request.body;
 
  //   console.log(request.body);
 
-    dboperations.createTenantContractNotificationAndSendPush(contract_id, type_id, message, item_id)
+    dboperations.createUserContractNotificationAndSendPush(contract_id, type_id, message, item_id)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -883,19 +890,19 @@ router.post('/create-tenant-contract-notification-and-send-push', (request, resp
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /create-tenant-contract-notification-and-send-push:", error);
+            console.error("Error in /create-user-contract-notification-and-send-push:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
 
 
-router.post('/create-tenant-notification-and-send-push', (request, response) => {
-    const { tenant_id, type_id, message, item_id} = request.body;
+router.post('/create-user-notification-and-send-push', (request, response) => {
+    const { user_id, type_id, message, item_id} = request.body;
 
  //   console.log(request.body);
 
-    dboperations.createTenantNotificationAndSendPush(tenant_id, type_id, message, item_id)
+    dboperations.createUserNotificationAndSendPush(user_id, type_id, message, item_id)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -903,17 +910,17 @@ router.post('/create-tenant-notification-and-send-push', (request, response) => 
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /create-tenant-notification-and-send-push:", error);
+            console.error("Error in /create-user-notification-and-send-push:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
 
 
-router.post('/create-tenant-building-post-report', (request, response) => {
+router.post('/create-user-building-post-report', (request, response) => {
     const { post_id ,building_id, reported_by_id, reason, additional_comments } = request.body;
 
 
-    dboperations.createTenantBuildingPostReport(post_id, building_id, reported_by_id, reason, additional_comments)
+    dboperations.createUserBuildingPostReport(post_id, building_id, reported_by_id, reason, additional_comments)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -921,7 +928,7 @@ router.post('/create-tenant-building-post-report', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /create-tenant-building-post-report:", error);
+            console.error("Error in /create-user-object-post-report:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
@@ -985,13 +992,13 @@ router.post('/create-quick-new-user', (request, response) => {
 
 
 router.post('/update-quick-user', (request, response) => {
-    const { first_name, last_name, object_id, tenant_id} = request.body;
+    const { first_name, last_name, object_id, user_id} = request.body;
 
 
     //console.log(request.body);
 
 
-    dboperations.updateQuickTenant(first_name, last_name, object_id, tenant_id)
+    dboperations.updateQuickUser(first_name, last_name, object_id, user_id)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);

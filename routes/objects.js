@@ -184,7 +184,7 @@ router.post('/update-object-details', (request, response) => {
         });
 });
 router.post('/update-object-field', (request, response) => {
-    const { object_id, table, field,value } = request.body;
+    const { object_id, table, field,value } = request.query;
 
 
     dboperations.updateObjectField(object_id, table, field,value)
@@ -276,7 +276,7 @@ router.post('/create-quick-object', (request, response) => {
 });
 
 router.post('/create-object', (request, response) => {
-    var { json} = request.body;
+     const json = JSON.stringify(request.body);
 
     if (!json) {
         return response.status(400).json({ success: false, message: "Missing jsonfile" });
@@ -293,7 +293,14 @@ router.post('/create-object', (request, response) => {
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
+/*
+{
+  "company": 1,
+  "address": "123 Main St",
+  "name": "mine"
+}
 
+*/ 
 router.post('/create-object-media', (request, response) => {
     var {  object_id, doc_url,  file_name, creator_id, creator_type} = request.query;
 
