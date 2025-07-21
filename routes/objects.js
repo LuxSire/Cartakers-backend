@@ -104,10 +104,26 @@ router.post('/get-object-by-id', (request, response) => {
 });
 
 
+router.post('/get-objects-by-user-id', (request, response) => {
+    const user_id = request.query.id;
 
+
+
+    dboperations.getObjectsByUserId(user_id)
+        .then(result => {
+            if (!result.success) {
+                return response.status(404).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /get-objects-by-user:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
 
 router.post('/get-objects-by-company-id', (request, response) => {
-    const company = request.query.company;
+    const company = request.query.id;
 
 
 

@@ -133,11 +133,11 @@ async function getObjectById(id) {
     }
 }
 
-async function getObjectsByCompanyId(agency_id) {
+async function getObjectsByCompanyId(company_id) {
     try {
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.get_object_by_company_id(?)`,
-            [agency_id]
+            `CALL ${process.env['DB_DATABASE']}.get_objects_by_company_id(?)`,
+            [company_id]
         );
 
         const buildings = result[0] || []; // Ensure valid data
@@ -152,6 +152,29 @@ async function getObjectsByCompanyId(agency_id) {
         return {
             success: false,
             message: "Failed to retrieve company objects types due to a database error",
+            data: []
+        };
+    }
+}
+async function getObjectsByUserId(user_id) {
+    try {
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.get_objects_by_user_id(?)`,
+            [user_id]
+        );
+
+        const buildings = result[0] || []; // Ensure valid data
+
+        return {
+            success: buildings.length > 0,
+            message: buildings.length > 0 ? "User objects retrieved successfully" : "No objects found",
+            data: buildings
+        };
+    } catch (error) {
+        console.error('Error in getUsersBycompanyId:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve user objects types due to a database error",
             data: []
         };
     }
@@ -580,7 +603,8 @@ module.exports = {
     getObjectAllRequests: getObjectAllRequests,
     addUserToObject: addUserToObject,
     createObject: createObject,
-    createQuickObject: createQuickObject
+    createQuickObject: createQuickObject,
+    getObjectsByUserId:getObjectsByUserId
 }
 
 
