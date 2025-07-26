@@ -529,6 +529,29 @@ async function getAllObjectPermissions(object_id) {
     }
 }
 
+async function getUserObjectPermissions(object_id,user_id) {
+    try {
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.get_user_object_permissions(?,?)`,
+            [object_id,user_id]
+        );
+
+        const objects = result[0] || []; // Ensure valid data
+
+        return {
+            success: objects.length > 0,
+            message: objects.length > 0 ? "Object user permissions retrieved successfully" : "No object user permissions found",
+            data: objects
+        };
+    } catch (error) {
+        console.error('Error in getUserObjectPermissions:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve user object permissions due to a database error",
+            data: []
+        };
+    }
+}
 
 
 async function getObjectRecentBookings(object_id) {
@@ -604,7 +627,8 @@ module.exports = {
     addUserToObject: addUserToObject,
     createObject: createObject,
     createQuickObject: createQuickObject,
-    getObjectsByUserId:getObjectsByUserId
+    getObjectsByUserId:getObjectsByUserId,
+    getUserObjectPermissions: getUserObjectPermissions
 }
 
 
