@@ -8,8 +8,8 @@ const heicConvert = require('heic-convert');
 
 // Azure Storage settings
 const { BlobServiceClient,  generateBlobSASQueryParameters ,StorageSharedKeyCredential, newPipeline, BlobSASPermissions } = require("@azure/storage-blob");
-const accountName =  process.env['AZURE_TENANTS10_BLOB_NAME'];
-const accountKey = process.env['AZURE_TENANTS10_BLOB_ACCOUNT_KEY'];
+const accountName =  process.env['AZURE_BLOB_NAME'];
+const accountKey = process.env['AZURE_BLOB_ACCOUNT_KEY'];
 const pipeline = newPipeline(new StorageSharedKeyCredential(accountName, accountKey));
 
 const blobServiceClient = new BlobServiceClient(
