@@ -31,12 +31,13 @@ app.use(cors());
 const usersRouter = require('./routes/users');
 const mailingRouter = require('./routes/mailing');
 const objectsRouter = require('./routes/objects');
+const aiRouter = require('./routes/ai');
 
 // Existing routes
 
 app.use('/api/users', usersRouter);
 app.use('/api/mailing', mailingRouter);
-
+app.use('/api/ai', aiRouter);
 app.use('/api/objects', objectsRouter);
 
 
