@@ -3,6 +3,27 @@ const router = express.Router();
 const dboperations = require('../service/objects/dboperations'); // Import the appropriate database operations module
 const e = require('express');
 
+
+// Get all document URLs for an object from Azure Blob Storage
+router.post('/get-object-doc-urls', (request, response) => {
+    const object_id = request.body.object_id || request.query.object_id;
+
+    if (!object_id) {
+        return response.status(400).json({ success: false, message: "object_id is required" });
+    }
+
+    dboperations.getObjectDocUrls(object_id)
+        .then(result => {
+            if (!result.success) {
+                return response.status(404).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /get-object-doc-urls:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
 // Get Last Object Announcement
 router.post('/get-object-last-announcement', (request, response) => {
     const object_id = request.query.object_id;
@@ -87,7 +108,7 @@ router.post('/get-object-posts', (request, response) => {
 
 
 router.post('/get-object-by-id', (request, response) => {
-    const id = request.query.id;
+    const id = request.body.id || request.query.id;
 
 
     dboperations.getObjectById(id)
@@ -105,7 +126,11 @@ router.post('/get-object-by-id', (request, response) => {
 
 
 router.post('/get-objects-by-user-id', (request, response) => {
-    const user_id = request.query.id;
+        const user_id = request.body.user_id || request.query.user_id;
+
+    if (!user_id) {
+        return response.status(400).json({ success: false, message: "user_id is required" });
+    }
 
 
 
@@ -123,9 +148,11 @@ router.post('/get-objects-by-user-id', (request, response) => {
 });
 
 router.post('/get-objects-by-company-id', (request, response) => {
-    const company = request.query.id;
+    const company = request.query.company_id || request.body.company_id;
 
-
+    if (!company) {
+        return response.status(400).json({ success: false, message: "company_id is required" });
+    }
 
     dboperations.getObjectsByCompanyId(company)
         .then(result => {
@@ -184,10 +211,10 @@ router.post('/get-all-types', (request, response) => {
 });
 
 router.post('/update-object-details', (request, response) => {
-    const { object_id, name, street,  zip_code, location, image_url } = request.body;
+    const { object_id, name, street,  zip_code, location, image_url,description } = request.body;
 
 
-    dboperations.updateObjectDetails(object_id, name, street, zip_code, location, image_url)
+    dboperations.updateObjectDetails(object_id, name, street, zip_code, location, image_url,description)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -375,7 +402,7 @@ router.post('/update-file-name', (request, response) => {
 
 
 router.post('/get-all-object-permissions', (request, response) => {
-    const object_id = request.query.id;
+    const object_id = request.query.id || request.body.id;
 
     dboperations.getAllObjectPermissions(object_id)
         .then(result => {
@@ -389,7 +416,37 @@ router.post('/get-all-object-permissions', (request, response) => {
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
+router.post('/get-user-object-permissions', (request, response) => {
+    const object_id = request.query.object_id || request.body.object_id;
+    const user_id = request.query.user_id || request.body.user_id;
 
+    dboperations.getUserObjectPermissions(object_id, user_id    )
+        .then(result => {
+            if (!result.success) {
+                return response.status(404).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /get-user-object-permissions:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
+router.post('/get-object-units-by-id', (request, response) => {
+    const object_id = request.query.object_id || request.body.object_id;
+
+    dboperations.getAllObjectUnits(object_id)
+        .then(result => {
+            if (!result.success) {
+                return response.status(404).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /get-object-units-by-id:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
 
 router.post('/delete-object-by-id', (request, response) => {
     const object_id = request.query.object_id;

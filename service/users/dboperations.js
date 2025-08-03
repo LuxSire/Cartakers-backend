@@ -2,7 +2,7 @@ require('dotenv').config();
 
 const pool = require('../dbconfig'); // Ensure this exports the mysql2/promise pool
 const { hashPassword, verifyPassword, generateSalt } = require('../bcrypt');
-const { post } = require('request');
+const { post, get } = require('request');
 const axios = require("axios"); //  Import axios
 
 
@@ -17,7 +17,7 @@ async function validateUserInvitationToken(token) {
             `CALL ${process.env['DB_DATABASE']}.validate_user_invitation_token(?)`,
             [token]
         );
-
+        console.log('Token received:', token);
         const data = result[0] || [];
         return {
             success: data.length > 0,
@@ -88,12 +88,12 @@ async function registerUser(user) {
 async function RegisterCompany(company) {
     try {
 
-      //  console.log('registerAgent:', agent);
-        const {  id, name, user,phone,country } = company;
+
+        const {  company_id, first_name, last_name,email,password } = company;
 
         const [result] = await pool.execute(
             `CALL ${process.env['DB_DATABASE']}.register_update_company(?,?,?,?,?)`,
-            [ name,user, phone, country, id]
+            [ email,password,first_name,last_name,company_id]
         );
 
         // Fix: Ensure that only the first item is returned
@@ -186,15 +186,15 @@ async function getCompanyByEmail(email) {
 
         return {
             success: data.length > 0,
-            message: data.length > 0 ? "Agent found" : "Agent not found",
+            message: data.length ? "Company found" : "Company not found",
             data: data
         };
     } catch (error) {
-        console.error('Error in getAgentByEmail:', error);
+        console.error('Error in getCompanyByEmail:', error);
         return {
             success: false,
-            message: "Failed to retrieve agent due to a database error",
-            data: null
+            message: "Failed to retrieve company due to a database error",
+            data: []
         };
     }
 }
@@ -254,7 +254,29 @@ async function updateUserField(user_id, table, field,value) {
         };
     }
 }
+async function getUsersByCompanyId(company_id) {
+    try {
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.get_users_by_company_id(?)`,
+            [company_id]
+        );
 
+        const buildings = result[0] || []; // Ensure valid data
+
+        return {
+            success: buildings.length > 0,
+            message: buildings.length > 0 ? "Company users retrieved successfully" : "No objects found",
+            data: buildings
+        };
+    } catch (error) {
+        console.error('Error in getUsersByCompanyId:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve company users  due to a database error",
+            data: []
+        };
+    }
+}
 async function getCompanyById(id) {
     try {
 
@@ -263,7 +285,7 @@ async function getCompanyById(id) {
             `CALL ${process.env['DB_DATABASE']}.get_company_by_id(?)`,
             [id]
         );
-
+        console.log('getCompanyById:', id);
         const data = result[0] || [];
         return {
             success: data.length > 0,
@@ -1173,6 +1195,7 @@ module.exports = {
     RegisterCompany: RegisterCompany,
     getCompanyByEmail: getCompanyByEmail,
     getCompanyById: getCompanyById,
+    getUsersByCompanyId: getUsersByCompanyId,
     getAllUsers: getAllUsers,
     updateUserField: updateUserField,
     getAllCompanies: getAllCompanies,

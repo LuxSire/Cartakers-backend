@@ -1,8 +1,38 @@
 require('dotenv').config();
 
+const { get } = require('request');
 const pool = require('../dbconfig'); // Ensure this exports the mysql2/promise pool
 
+const { BlobServiceClient } = require('@azure/storage-blob');
+const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
+const containerName = 'docs';
 
+async function getObjectDocUrls(object_id) {
+    try {
+        const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
+        const containerClient = blobServiceClient.getContainerClient(containerName);
+
+        const prefix = `${object_id}/`;
+        let urls = [];
+        for await (const blob of containerClient.listBlobsFlat({ prefix })) {
+            const url = `https://xmarketstorage.blob.core.windows.net/${containerName}/${blob.name}`;
+            urls.push(url);
+        }
+
+        return {
+            success: true,
+            message: urls.length ? "Document URLs found" : "No documents found",
+            data: urls
+        };
+    } catch (error) {
+        console.error('Error in getObjectDocUrls:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve document URLs",
+            data: []
+        };
+    }
+}
 // Get Last Building Announcement
 async function getObjectLastAnnouncement(building_id) {
     try {
@@ -156,6 +186,7 @@ async function getObjectsByCompanyId(company_id) {
         };
     }
 }
+
 async function getObjectsByUserId(user_id) {
     try {
         const [result] = await pool.execute(
@@ -163,15 +194,15 @@ async function getObjectsByUserId(user_id) {
             [user_id]
         );
 
-        const buildings = result[0] || []; // Ensure valid data
+        const objects = result[0] || []; // Ensure valid data
 
         return {
-            success: buildings.length > 0,
-            message: buildings.length > 0 ? "User objects retrieved successfully" : "No objects found",
-            data: buildings
+            success: objects.length > 0,
+            message: objects.length > 0 ? "User objects retrieved successfully" : "No objects found",
+            data: objects
         };
     } catch (error) {
-        console.error('Error in getUsersBycompanyId:', error);
+        console.error('Error in getObjesByUserId:', error);
         return {
             success: false,
             message: "Failed to retrieve user objects types due to a database error",
@@ -245,13 +276,13 @@ async function getAllTypes() {
         };
     }
 }
-async function updateObjectDetails(object_id, name, street, object_number, zip_code, location, image_url) {
+async function updateObjectDetails(object_id, name, street, zip_code, location, image_url,description) {
     try {
 
 
         const [result] = await pool.execute(
             `CALL ${process.env['DB_DATABASE']}.update_object_details(?,?,?,?,?,?,?)`,
-            [object_id, name, street, object_number, zip_code, location, image_url]
+            [object_id, name, street, zip_code, location, image_url,description]
         );
 
         const data = result[0] || [];
@@ -602,6 +633,29 @@ async function getObjectAllRequests(object_id) {
         };
     }
 }
+async function getAllObjectUnits(object_id) {
+    try {
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.get_object_units_by_id(?)`,
+            [object_id]
+        );
+
+        const requests = result[0] || []; // Ensure valid data
+
+        return {
+            success: requests.length > 0,
+            message: requests.length > 0 ? "object units retrieved successfully" : "No object units found",
+            data: requests
+        };
+    } catch (error) {
+        console.error('Error in getAllObjectUnits:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve object units due to a database error",
+            data: []
+        };
+    }
+}
 
 module.exports = {
 
@@ -609,6 +663,7 @@ module.exports = {
     getObjectRequestLogs: getObjectRequestLogs,
     getObjectContactNumbers: getObjectContactNumbers,
     getObjectPosts: getObjectPosts,
+    getAllObjectUnits: getAllObjectUnits,
     getObjectById: getObjectById,
     getObjectsByCompanyId: getObjectsByCompanyId,
     getAllObjects: getAllObjects,
@@ -628,7 +683,8 @@ module.exports = {
     createObject: createObject,
     createQuickObject: createQuickObject,
     getObjectsByUserId:getObjectsByUserId,
-    getUserObjectPermissions: getUserObjectPermissions
+    getUserObjectPermissions: getUserObjectPermissions,
+    getObjectDocUrls: getObjectDocUrls
 }
 
 

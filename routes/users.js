@@ -233,7 +233,7 @@ async function generateSasToken(containerName, blobName) {
 
 // Validate User Invitation Token
 router.post('/validate-user-invitation-token', (request, response) => {
-    const token = request.query.token;
+    const token = request.body.token;
 
 
     dboperations.validateUserInvitationToken(token)
@@ -287,9 +287,9 @@ router.post('/register-user', (request, response) => {
 });
 
 router.post('/register-company', (request, response) => {
-    const company = request.query.company;
+    const company = request.body.company;
 
-    //console.log(agent);
+    console.log(company);
 
 
     dboperations.RegisterCompany(company)
@@ -345,7 +345,7 @@ router.post('/get-user-by-email', (request, response) => {
 });
 
 router.post('/get-company-by-email', (request, response) => {
-    const email = request.query.email;
+    const email = request.body.email || request.query.email;
 
 
 
@@ -398,7 +398,7 @@ router.post('/get-all-companies', (request, response) => {
         });
 });
 router.post('/get-user-by-id', (request, response) => {
-    const id = request.query.id;
+    const id = request.query.id || request.body.id  ;
 
 
 
@@ -417,7 +417,7 @@ router.post('/get-user-by-id', (request, response) => {
 
 
 router.post('/get-company-by-id', (request, response) => {
-    const id = request.query.id;
+    const id = request.body.id || request.query.id;
 
 
 
@@ -969,6 +969,30 @@ router.post('/get-all-users-by-object', (request, response) => {
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
+
+router.post('/get-users-by-company', (request, response) => {
+    const company_id = request.query.company_id || request.body.company_id;
+
+    if (!company_id) {
+        return response.status(400).json({ success: false, message: "company_id is required" });
+    }
+
+
+    dboperations.getUsersByCompanyId(company_id)
+        .then(result => {
+            if (!result.success) {
+                return response.status(404).json(result);
+            }
+
+
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /get-all-users-by-company:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
+
 
 router.post('/create-quick-new-user', (request, response) => {
     const { first_name, last_name, email, object_id, created_by_id} = request.body;
