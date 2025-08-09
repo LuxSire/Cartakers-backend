@@ -209,6 +209,72 @@ router.post("/email-user-mail", async (req, res) => {
 });
 
 
+router.post("/send-user-invitation-email", async (req, res) => {
+    try {
+        const { email, greetings, body_text, body2_title_text, body2_text, subject, lang } = req.body;
+
+
+ 
+        const translatedGreetings = await translateText(greetings, lang);
+        const translatedBody = await translateText(body_text, lang);
+        const translatedBody2Title = await translateText(body2_title_text, lang);
+        //const translatedBody2Text = await translateText(body2_text, lang);
+        const translatedSubject = await translateText(subject, lang);
+        const translatedAvailableOn = await translateText(`Available on:`, lang);
+        const translatedHelpText = await translateText(`Help?`, lang);  
+        const translatedSupport = await translateText(`Support`, lang);
+
+
+        // Load email template
+        let emailTemplate = fs.readFileSync(path.join(__dirname, "../templates/user-mail.html"), "utf8");
+
+        // Replace placeholders
+        emailTemplate = emailTemplate.replace("[GREETINGS-TEXT]", translatedGreetings)
+            .replace("[BODY-TEXT]", translatedBody)
+            .replace("[BODY2-TITLE-TEXT]", translatedBody2Title)
+            .replace("[BODY2-TEXT]", body2_text)
+            .replace("[DOWNLOAD-NOW-TEXT]", translatedAvailableOn)
+            .replace("[HELP-TEXT]", translatedHelpText)
+            .replace("[SUPPORT-TEXT]", translatedSupport);
+
+
+        const accessToken = await getAccessToken();
+
+        // Send Email using Microsoft Graph API
+        
+        const response = await fetch("https://graph.microsoft.com/v1.0/users/" + process.env.SENDER_EMAIL + "/sendMail", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                message: {
+                    subject: translatedSubject,
+                    body: {
+                        contentType: "HTML",
+                        content: emailTemplate,
+                    },
+                    toRecipients: [{ emailAddress: { address: email } }],
+            
+                },
+                saveToSentItems: "true",
+
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to send email: ${await response.text()}`);
+        }
+
+        console.log("Email sent successfully");
+        res.status(200).json({ success: true, message: "Email sent successfully", data: [{email, success: true}] });
+    } catch (error) {
+        console.error("Email sending error:", error);
+        res.status(500).json({ success: false, message: "Failed to send email", data: [] });
+    }
+});
+
 
 
 router.post("/email-company-user-mail", async (req, res) => {
@@ -327,7 +393,7 @@ router.post("/email-contact", async (req, res) => {
               contentType: "HTML",
               content: htmlContent,
             },
-            toRecipients: [{ emailAddress: { address: 'info@tenants10.com' } }],
+            toRecipients: [{ emailAddress: { address: 'info@xm.com' } }],
   
               
           },

@@ -6,7 +6,74 @@ const pool = require('../dbconfig'); // Ensure this exports the mysql2/promise p
 const { BlobServiceClient } = require('@azure/storage-blob');
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
 const containerName = 'docs';
+const storageAccount = process.env.AZURE_BLOB_NAME;
 
+async function getObjectDocs(object_id) {
+    try {
+        const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
+        const containerClient = blobServiceClient.getContainerClient(containerName);
+
+        const prefix = `objects/${object_id}/`;
+        let docs = [];
+        for await (const blob of containerClient.listBlobsFlat({ prefix })) {
+            docs.push({
+                url: `https://${storageAccount}.blob.core.windows.net/${containerName}/${blob.name}`,
+                name: blob.name.split('/').pop(),
+                contentType: blob.properties.contentType,
+                size: blob.properties.contentLength,
+                lastModified: blob.properties.lastModified,
+                etag: blob.properties.etag
+
+            });
+        }
+
+        return {
+            success: true,
+            message: docs.length ? "Documents found" : "No documents found",
+            data: docs
+        };
+    } catch (error) {
+        console.error('Error in getObjectDocs:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve documents",
+            data: []
+        };
+    }
+}
+async function getUserDocs(user_id) {
+    try {
+        const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
+        const containerClient = blobServiceClient.getContainerClient(containerName);
+
+        const prefix = `users/${user_id}/`;
+        let docs = [];
+        for await (const blob of containerClient.listBlobsFlat({ prefix })) {
+            docs.push({
+                url: `https://${storageAccount}.blob.core.windows.net/${containerName}/${blob.name}`,
+                name: blob.name.split('/').pop(),
+                contentType: blob.properties.contentType,
+                size: blob.properties.contentLength,
+                lastModified: blob.properties.lastModified,
+                etag: blob.properties.etag
+
+            });
+        }
+
+        return {
+            success: true,
+            message: docs.length ? "Documents found" : "No documents found",
+            data: docs
+        };
+    } catch (error) {
+        console.error('Error in getObjectDocs:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve documents",
+            data: []
+        };
+    }
+}
 async function getObjectDocUrls(object_id) {
     try {
         const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
@@ -15,7 +82,7 @@ async function getObjectDocUrls(object_id) {
         const prefix = `${object_id}/`;
         let urls = [];
         for await (const blob of containerClient.listBlobsFlat({ prefix })) {
-            const url = `https://xmarketstorage.blob.core.windows.net/${containerName}/${blob.name}`;
+            const url = `https://xmarketstorage.blob.core.windows.net/${containerName}/objects/${blob.name}`;
             urls.push(url);
         }
 
@@ -380,6 +447,7 @@ async function deleteUsersFromObject(object_id) {
     }
 }
 
+ 
 
 async function removeUserFromObject(object_id, user_id) {
     try {
@@ -408,6 +476,31 @@ async function removeUserFromObject(object_id, user_id) {
 }
 
 
+
+async function removePermission(permission_id) {
+    try {
+
+        // console.log(contract_id, tenant_id);
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.remove_permission(?)`,
+            [permission_id]
+        );
+
+        const data = result[0] || [];
+        return {
+            success: data.length > 0,
+            message: "Permission removed successfully",
+            data: data
+        };
+    } catch (error) {
+        console.error('Error in removePermission:', error);
+        return {
+            success: false,
+            message: "Failed to remove user from object due to a database error",
+            data: null
+        };
+    }
+}
 async function createObjectMedia(object_id, doc_url, file_name, creator_id, creator_type) {
     try {
 
@@ -559,6 +652,29 @@ async function getAllObjectPermissions(object_id) {
         };
     }
 }
+async function getAllPermissions() {
+    try {
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.get_all_permissions()`
+        );
+        
+        console.log('All Permissions Result:', result);
+        const buildings = result[0] || []; // Ensure valid data
+
+        return {
+            success: buildings.length > 0,
+            message: buildings.length > 0 ? "Permissions retrieved successfully" : "No object permissions found",
+            data: buildings
+        };
+    } catch (error) {
+        console.error('Error in getAllPermissions:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve  permissions due to a database error",
+            data: []
+        };
+    }
+}
 
 async function getUserObjectPermissions(object_id,user_id) {
     try {
@@ -684,7 +800,12 @@ module.exports = {
     createQuickObject: createQuickObject,
     getObjectsByUserId:getObjectsByUserId,
     getUserObjectPermissions: getUserObjectPermissions,
-    getObjectDocUrls: getObjectDocUrls
+    getObjectDocUrls: getObjectDocUrls,
+    getObjectDocs: getObjectDocs,
+    getUserDocs: getUserDocs,
+    getAllPermissions: getAllPermissions,
+    removePermission: removePermission
+
 }
 
 

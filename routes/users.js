@@ -75,54 +75,149 @@ const e = require('express');
 //     }
 //   });
 
+router.delete('/delete-user-media', async (req, res) => {
+    // Accept metadata from either query or body for flexibility
+    let { containerName, directoryName, fileName } = { ...req.body, ...req.query };
+
+    // Debug: Log incoming parameters
+    console.log('[delete-user-media] Received delete request:');
+    console.log('  containerName:', containerName);
+    console.log('  directoryName:', directoryName);
+    console.log('  fileName:', fileName);
+
+    if (!containerName || !directoryName || !fileName) {
+        return res.status(400).json({ message: 'Missing required parameters.' });
+    }
+    if (directoryName.startsWith('http')) {
+        try {
+            const url = new URL(directoryName);
+            // url.pathname: /docs/users/1
+            // Remove leading slash and container name
+            const pathParts = url.pathname.split('/');
+            const containerIndex = pathParts.indexOf(containerName);
+            if (containerIndex !== -1) {
+                directoryName = pathParts.slice(containerIndex + 1).join('/');
+            } else {
+                directoryName = pathParts.slice(1).join('/');
+            }
+            console.log('[delete-user-media] Sanitized directoryName:', directoryName);
+        } catch (e) {
+            console.error('[delete-user-media] Invalid directoryName URL:', directoryName);
+            return res.status(400).json({ message: 'Invalid directoryName URL.' });
+        }
+    }
+
+    try {
+        const blobServiceClient = new BlobServiceClient(
+            `https://${accountName}.blob.core.windows.net`,
+            new StorageSharedKeyCredential(accountName, accountKey)
+        );
+        const containerClient = blobServiceClient.getContainerClient(containerName);
+        const fullBlobName = `${directoryName}`;
+        console.log('[delete-user-media] fullBlobName:', fullBlobName);
+
+        const blobClient = containerClient.getBlobClient(fullBlobName);
+
+        // Check if the file exists
+        const exists = await blobClient.exists();
+        if (!exists) {
+            console.log('[delete-user-media] File not found:', fullBlobName);
+            return res.status(404).json({ message: 'File not found.' });
+        }
+
+        // Delete the file
+        await blobClient.delete();
+        console.log('[delete-user-media] File deleted:', fullBlobName);
+
+        return res.status(200).json({ message: 'File deleted successfully.' });
+    } catch (error) {
+        console.error('[delete-user-media] Error deleting file:', error);
+        return res.status(500).json({ message: 'Internal server error.' });
+    }
+});
+
 
 router.post('/upload-user-media', upload.single('file'), async (req, res) => {
     const uploadedFile = req.file;
-    let { containerName, contentType, directoryName, newFileName } = req.query;
-  
+    // Accept metadata from either query or body for flexibility
+    let { containerName, contentType, directoryName, newFileName } = { ...req.body, ...req.query };
+
+    // Debug: Log incoming parameters and file info
+    console.log('[upload-user-media] Received upload:');
+    console.log('  containerName:', containerName);
+    console.log('  directoryName:', directoryName);
+    console.log('  newFileName:', newFileName);
+    console.log('  contentType:', contentType);
+    if (uploadedFile) {
+        console.log('  file.originalname:', uploadedFile.originalname);
+        console.log('  file.mimetype:', uploadedFile.mimetype);
+        console.log('  file.size:', uploadedFile.size);
+    } else {
+        console.log('  No file uploaded.');
+    }
+
     if (!uploadedFile) {
-      return res.status(400).json({ message: 'No file uploaded.' });
+        return res.status(400).json({ message: 'No file uploaded.' });
     }
-  
+    if (!containerName || !directoryName || !newFileName) {
+        return res.status(400).json({ message: 'Missing required parameters.' });
+    }
+
     try {
-      let bufferToUpload = uploadedFile.buffer;
-  
-      //  Detect and convert .heic
-      if (contentType === 'image/heic') {
-        const convertedBuffer = await heicConvert({
-          buffer: bufferToUpload,
-          format: 'JPEG',
-          quality: 1
+        let bufferToUpload = uploadedFile.buffer;
+
+        // Optional: Convert HEIC images to JPEG
+        if (contentType === 'image/heic' || uploadedFile.mimetype === 'image/heic') {
+            console.log('[upload-user-media] Converting HEIC to JPEG...');
+            const convertedBuffer = await heicConvert({
+                buffer: bufferToUpload,
+                format: 'JPEG',
+                quality: 1
+            });
+            bufferToUpload = convertedBuffer;
+            contentType = 'image/jpeg';
+            newFileName = newFileName.replace(/\.heic$/i, ''); // remove .heic extension if present
+        }
+
+        // Determine file extension
+        let extension = '';
+        if (contentType && contentType.includes('/')) {
+            extension = contentType.split('/')[1];
+        } else if (uploadedFile.originalname && uploadedFile.originalname.includes('.')) {
+            extension = uploadedFile.originalname.split('.').pop();
+        } else {
+            extension = 'bin'; // fallback
+        }
+
+        // Remove extension from newFileName if present
+        newFileName = newFileName.replace(/\.[^/.]+$/, "");
+
+        const fullBlobName = `${directoryName}/${newFileName}.${extension}`;
+        console.log('[upload-user-media] fullBlobName:', fullBlobName);
+
+        const blobServiceClient = new BlobServiceClient(`https://${accountName}.blob.core.windows.net`, pipeline);
+        const containerClient = blobServiceClient.getContainerClient(containerName);
+        const blockBlobClient = containerClient.getBlockBlobClient(fullBlobName);
+
+        await blockBlobClient.uploadData(bufferToUpload, {
+            blobHTTPHeaders: { blobContentType: contentType || uploadedFile.mimetype }
         });
-  
-        bufferToUpload = convertedBuffer;
-        contentType = 'image/jpeg';
-        newFileName = newFileName.replace(/\.heic$/i, ''); // remove extension if passed in
-      }
-  
-      const extension = contentType.split('/')[1];
-      const blobServiceClient = new BlobServiceClient(`https://${accountName}.blob.core.windows.net`, pipeline);
-      const containerClient = blobServiceClient.getContainerClient(containerName);
-  
-      const fullBlobName = `${directoryName}/${newFileName}.${extension}`;
-      const blockBlobClient = containerClient.getBlockBlobClient(fullBlobName);
-  
-      await blockBlobClient.uploadData(bufferToUpload, {
-        blobHTTPHeaders: { blobContentType: contentType }
-      });
-  
-      const fullUrl = `https://${accountName}.blob.core.windows.net/${containerName}/${fullBlobName}`;
-  
-      return res.status(200).json({
-        message: 'File uploaded to Azure Blob Storage.',
-        url: fullUrl,
-        converted: contentType === 'image/jpeg'
-      });
+
+        const fullUrl = `https://${accountName}.blob.core.windows.net/${containerName}/${fullBlobName}`;
+        console.log('[upload-user-media] File uploaded to:', fullUrl);
+
+        return res.status(200).json({
+            message: 'File uploaded to Azure Blob Storage.',
+            url: fullUrl,
+            fileName: `${newFileName}.${extension}`,
+            contentType: contentType || uploadedFile.mimetype,
+            size: bufferToUpload.length
+        });
     } catch (error) {
-      console.error('Error uploading to Azure Blob Storage:', error);
-      return res.status(500).json({ message: 'Internal server error.' });
+        console.error('[upload-user-media] Error uploading to Azure Blob Storage:', error);
+        return res.status(500).json({ message: 'Internal server error.' });
     }
-  });
+});
 
   router.delete('/delete-user-directory', async (req, res) => {
 
@@ -270,8 +365,9 @@ router.post('/validate-company-invitation-token', (request, response) => {
 
 // Register user
 router.post('/register-user', (request, response) => {
-    const user = request.query.user;
+    const user = request.query.user || request.body.user;
 
+    console.log('user when registering:', user);
 
     dboperations.registerUser(user)
         .then(result => {
@@ -325,7 +421,7 @@ router.post('/login-user', (request, response) => {
 
 // Get User by Email
 router.post('/get-user-by-email', (request, response) => {
-    const email = request.query.email;
+    const email = request.query.email || request.body.email;
 
    console.log(request);
    console.log(email);
@@ -380,6 +476,22 @@ router.post('/get-all-users', (request, response) => {
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
+router.post('/get-all-user-roles', (request, response) => {
+
+    dboperations.getAllUserRoles()
+        .then(result => {
+            if (!result.success) {
+                return response.status(404).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /get-all-user-roles:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
+
+
 router.post('/get-all-companies', (request, response) => {
     
 
@@ -600,9 +712,9 @@ router.post('/update-user-field', (request, response) => {
 */
 
 router.post('/update-user-personal-details', (request, response) => {
-    const { user_id, display_name, phone_number, country_code, profile_pic } = request.body;
+    const { user_id, first_name, last_name, display_name, phone_number, country_code, profile_pic } = request.body || request.query;
 
-    dboperations.updateUserPersonalDetails(user_id, display_name, phone_number, country_code, profile_pic)
+    dboperations.updateUserPersonalDetails(user_id,first_name,last_name, display_name, phone_number, country_code, profile_pic)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -619,11 +731,11 @@ router.post('/update-user-personal-details', (request, response) => {
 
 
 
-router.post('/get-user-object-docs', (request, response) => {
+router.post('/get-object-docs', (request, response) => {
     const object_id = request.query.object_id;
 
 
-    dboperations.getUserObjectDocs(object_id)
+    dboperations.getObjectDocs(object_id)
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -637,7 +749,6 @@ router.post('/get-user-object-docs', (request, response) => {
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
-
 
 
 router.post('/update-user-object-request-status', (request, response) => {
@@ -673,6 +784,28 @@ router.post('/update-user-reset-password-code', (request, response) => {
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
+
+router.post('/get-user-invitation-code', (request, response) => {
+        const email = request.body.email || request.query.email;
+        const user_id = request.body.user_id || request.query.user_id;
+
+
+    console.log("get-user-invitation-code", email, user_id);
+
+    dboperations.getUserInvitationCode(email, user_id)
+        .then(result => {
+            if (!result.success) {
+                return response.status(400).json(result);
+            }
+
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /get-user-invitation-code:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
+               
 
 router.post('/update-user-device-token', (request, response) => {
     const { user_id, device_token } = request.query;
@@ -949,7 +1082,22 @@ router.post('/delete-user-object-post', (request, response) => {
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
+router.post('/delete-user-by-id', (request, response) => {
+    const user_id = request.query.user_id || request.body.user_id;
 
+
+    dboperations.deleteUserbyId(user_id)
+        .then(result => {
+            if (!result.success) {
+                return response.status(400).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /delete-user-by-id:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
 router.post('/get-all-users-by-object', (request, response) => {
     const object_id = request.query.object_id;
 
@@ -993,15 +1141,57 @@ router.post('/get-users-by-company', (request, response) => {
         });
 });
 
+router.post('/create-token', (request, response) => {
+
+    const uuidv4 = require('uuid').v4;
+    const token = uuidv4();
+    console.log("Generated token:", token);
+    response.json({ token });
+ });
+router.post('/update-token-by-user', (request, response) => {
+
+    const user_id = request.query.user_id || request.body.user_id;
+    const email= request.query.email || request.body.email;
+
+    const uuidv4 = require('uuid').v4;
+    const token = uuidv4();
+    console.log("Generated token:", token);
+
+    dboperations.updateUserInvitationCode(user_id, email, token)
+
+    response.json({ token });
+ });
+
+
+router.post('/get-all-user-permissions', (request, response) => {
+    const user_id = request.query.user_id || request.body.user_id;
+
+    dboperations.getAllUserPermissions(user_id)
+        .then(result => {
+            if (!result.success) {
+                return response.status(404).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /get-all-user-permissions:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });x
+});
+
+
 
 router.post('/create-quick-new-user', (request, response) => {
-    const { first_name, last_name, email, object_id, created_by_id} = request.body;
+    let { first_name, last_name, email, phone_number, role_id, company_id,token } = request.body || request.query;
 
 
-    //console.log(request.body);
+            if (!token) {
+                const uuidv4 = require('uuid').v4;
+                token = uuidv4();
+            }   
 
 
-    dboperations.createQuickNewUser(first_name, last_name, email, object_id, created_by_id)
+    dboperations.createQuickNewUser(first_name, last_name, email, phone_number, role_id, company_id,token)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -1056,7 +1246,7 @@ router.post('/get-user-all-requests', (request, response) => {
 
 
 router.post('/get-user-all-requests-by-user-id', (request, response) => {
-    const user_id = request.query.user_id;
+    const user_id = request.query.user_id || request.body.user_id;
 
 
     dboperations.getUserObjectAllRequestsByUserId(user_id)

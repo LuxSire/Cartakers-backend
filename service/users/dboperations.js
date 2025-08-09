@@ -9,6 +9,30 @@ const axios = require("axios"); //  Import axios
 
 
 
+async function deleteUserbyId(user_id) {
+    try {
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.delete_user_by_id(?)`,
+            [user_id]
+        );
+
+        const data = result[0] || [];
+        return {
+            success: data.length > 0,
+            message: "User deleted successfully",
+            data: data
+        };
+    } catch (error) {
+        console.error('Error in deleteUserbyId:', error);
+        return {
+            success: false,
+            message: "Failed to delete user due to a database error",
+            data: null
+        };
+    }
+}
+
+
 //// start flutter calls 
 
 async function validateUserInvitationToken(token) {
@@ -60,11 +84,24 @@ async function validateCompanyInvitationToken(token) {
 
 async function registerUser(user) {
     try {
-        const { id, email, first_name, last_name, phone, country, password } = user;
 
+        console.log('registerUser:', user);
+        const {  email, first_name, last_name, phone, country, password } = user.user;
+
+
+                // Get user by email to extract user_id
+        const userResult = await getUserByEmail(email);
+        let user_id = null;
+        if (userResult.success && userResult.data.length > 0) {
+            user_id = userResult.data[0].id; // Adjust 'id' if your field is named differently
+        }
+
+        console.log('User Results:', userResult);
+
+        console.log('User ID:', id);
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.register_update_user(?,?,?,?,?,?,?)`,
-            [email, password, first_name, last_name, phone, country, id]
+            `CALL ${process.env['DB_DATABASE']}.register_update_user(?,?,?,?,?)`,
+            [email, password, first_name, last_name,  id]
         );
         
         // Fix: Ensure that only the first item is returned
@@ -144,7 +181,9 @@ async function loginUser(user) {
 async function getUserByEmail(email) {
     try {
 
-         //console.log('getUserByEmail:', email);
+         console.log('getUserByEmail:', email);
+
+        
 
         const [result] = await pool.execute(
             `CALL ${process.env['DB_DATABASE']}.get_user_by_email(?)`,
@@ -450,13 +489,23 @@ async function createUserObjectPostMedia(post_id, media_url) {
     }
 }
 
-async function updateUserPersonalDetails(user_id, display_name, phone_number, country_code, profile_pic) {
+async function updateUserPersonalDetails(user_id, first_name,last_name,display_name, phone_number, country_code, profile_pic) {
     try {
-        const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.update_user_personal_details(?,?,?,?,?)`,
-            [user_id, display_name, phone_number, country_code, profile_pic]
-        );
+      // Replace undefined with null for all parameters
+        const params = [
+            user_id ?? null,
+            first_name ?? null,
+            last_name ?? null,
+            display_name ?? null,
+            phone_number ?? null,
+            country_code ?? 'IT',
+            profile_pic ?? null
+        ];
 
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.update_user_personal_details(?,?,?,?,?,?,?)`,
+            params
+        );
         const data = result[0] || [];
         return {
             success: data.length > 0,
@@ -776,7 +825,57 @@ async function getUserDeviceTokens(user_id) {
     }
 }
 
+async function getUserInvitationCode(email,user_id) {
+    try {
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.get_user_invitation_code(?,?)`,
+            [email,user_id]
+        );
 
+        // Extract only the first element of the result, which contains the actual request data
+        const requests = result[0] || []; // Ensure it's a valid list
+
+        console.log('getUserInvitationCode:', requests);
+        return {
+            success: requests.length > 0 ? true : false,
+            message: requests.length > 0 ? "User invitation code retrieved successfully" : "No invitation code found",
+            data: requests
+        };
+    } catch (error) {
+        console.error('Error in getUserInvitationCode:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve user invitation code due to a database error",
+            data: []
+        };
+    }
+}
+
+async function updateUserInvitationCode(user_id,email,token) {
+    try {
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.update_user_invitation_code(?,?,?)`,
+            [user_id,email,token]
+        );
+
+        // Extract only the first element of the result, which contains the actual request data
+        const requests = result[0] || []; // Ensure it's a valid list
+
+        console.log('updateUserInvitationCode:', requests);
+        return {
+            success: requests.length > 0 ? true : false,
+            message: requests.length > 0 ? "User invitation code updated successfully" : "No invitation code found",
+            data: requests
+        };
+    } catch (error) {
+        console.error('Error in updateUserInvitationCode:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve user invitation code due to a database error",
+            data: []
+        };
+    }
+}
 
 
 
@@ -943,6 +1042,32 @@ async function deleteUserObjectPost(post_id) {
     }
 }
 
+
+async function getAllUserPermissions(user_id) {
+    try {
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.get_all_user_permissions(?)`,
+            [user_id]
+        );
+
+        const buildings = result[0] || []; // Ensure valid data
+
+        return {
+            success: buildings.length > 0,
+            message: buildings.length > 0 ? "User permissions retrieved successfully" : "No user permissions found",
+            data: buildings
+        };
+    } catch (error) {
+        console.error('Error in getAllUserPermissions:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve user permissions due to a database error",
+            data: []
+        };
+    }
+}
+
+
 async function getUsersbyObjectId(object_id) {
     try {
         const [result] = await pool.execute(
@@ -971,13 +1096,12 @@ async function getUsersbyObjectId(object_id) {
 }
 
 
-async function createQuickNewUser(first_name, last_name, email, object_id, created_by_id) {
+async function createQuickNewUser(first_name, last_name, email, phone_number,roleID, companyID,token) {
     try {
 
-
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.create_quick_new_user(?,?,?,?,?)`,
-            [first_name, last_name, email, object_id, created_by_id]
+            `CALL ${process.env['DB_DATABASE']}.create_quick_new_user(?,?,?,?,?,?,?)`,
+            [first_name, last_name, email, phone_number, roleID, companyID, token]
         );
         
 
@@ -1062,6 +1186,28 @@ async function getAllUsers() {
         };
     }
 }
+async function getAllUserRoles() {
+    try {
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.get_all_roles()`
+        );
+
+        const buildings = result[0] || []; // Ensure valid data
+
+        return {
+            success: buildings.length > 0,
+            message: buildings.length > 0 ? "User roles retrieved successfully" : "No users found",
+            data: buildings
+        };
+    } catch (error) {
+        console.error('Error in getAllUsers:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve  objects types due to a database error",
+            data: []
+        };
+    }
+}
 async function getAllCompanies() {
     try {
         const [result] = await pool.execute(
@@ -1109,6 +1255,39 @@ async function getUserObjectAllRequests(object_id) {
     }
 }
 
+async function getUserDocs(user_id) {
+    try {
+        const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
+        const containerClient = blobServiceClient.getContainerClient(containerName);
+
+        const prefix = `users/${user_id}/`;
+        let docs = [];
+        for await (const blob of containerClient.listBlobsFlat({ prefix })) {
+            docs.push({
+                url: `https://${storageAccount}.blob.core.windows.net/${containerName}/${blob.name}`,
+                name: blob.name.split('/').pop(),
+                contentType: blob.properties.contentType,
+                size: blob.properties.contentLength,
+                lastModified: blob.properties.lastModified,
+                etag: blob.properties.etag
+
+            });
+        }
+
+        return {
+            success: true,
+            message: docs.length ? "Documents found" : "No documents found",
+            data: docs
+        };
+    } catch (error) {
+        console.error('Error in getObjectDocs:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve documents",
+            data: []
+        };
+    }
+}
 
 async function getUserObjectAllRequestsByUserId(user_id) {
     try {
@@ -1164,6 +1343,7 @@ async function updateUserRequestStatus(request_id, status_id) {
 
 module.exports = {
 
+    getAllUserPermissions:getAllUserPermissions,
     validateUserInvitationToken: validateUserInvitationToken,
     registerUser: registerUser,
     loginUser: loginUser,
@@ -1204,6 +1384,11 @@ module.exports = {
     getUserObjectAllRequests: getUserObjectAllRequests,
     updateUserRequestStatus: updateUserRequestStatus,
     getUserObjectAllRequestsByUserId: getUserObjectAllRequestsByUserId,
-    updateQuickUser: updateQuickUser
+    updateQuickUser: updateQuickUser,
+    getAllUserRoles: getAllUserRoles,
+    deleteUserbyId: deleteUserbyId,
+    getUserDocs: getUserDocs,
+    getUserInvitationCode: getUserInvitationCode,
+    updateUserInvitationCode: updateUserInvitationCode
 }
 

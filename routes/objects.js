@@ -4,6 +4,41 @@ const dboperations = require('../service/objects/dboperations'); // Import the a
 const e = require('express');
 
 
+router.post('/get-user-docs', (request, response) => {
+    const user_id = request.query.user_id || request.body.user_id;
+
+
+    dboperations.getUserDocs(user_id)
+        .then(result => {
+            if (!result.success) {
+                return response.status(404).json(result);
+            }
+
+           
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /get-user-docs:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
+
+router.post('/get-object-docs', async (request, response) => {
+    const object_id = request.body.object_id || request.query.object_id;
+
+    if (!object_id) {
+        return response.status(400).json({ success: false, message: "object_id is required" });
+    }
+
+    try {
+        const result = await dboperations.getObjectDocs(object_id);
+        response.json(result);
+    } catch (error) {
+        console.error("Error in /get-object-docs:", error);
+        response.status(500).json({ success: false, message: "Internal server error" });
+    }
+});
+
 // Get all document URLs for an object from Azure Blob Storage
 router.post('/get-object-doc-urls', (request, response) => {
     const object_id = request.body.object_id || request.query.object_id;
@@ -300,6 +335,22 @@ router.post('/remove-user-from-object', (request, response) => {
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
+router.post('/remove-permission', (request, response) => {
+    const permission_id = request.query.id || request.body.id;
+
+
+    dboperations.removePermission(permission_id)
+        .then(result => {
+            if (!result.success) {
+                return response.status(404).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /remove-user-from-object:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
 
 router.post('/create-quick-object', (request, response) => {
     var {  name, address,  company} = request.query;
@@ -399,7 +450,20 @@ router.post('/update-file-name', (request, response) => {
         });
 });
 
+router.post('/get-all-permissions', (request, response) => {
 
+    dboperations.getAllPermissions()
+        .then(result => {
+            if (!result.success) {
+                return response.status(404).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /get-all-permissions:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
 
 router.post('/get-all-object-permissions', (request, response) => {
     const object_id = request.query.id || request.body.id;
