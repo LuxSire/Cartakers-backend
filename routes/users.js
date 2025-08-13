@@ -1203,6 +1203,28 @@ router.post('/create-quick-new-user', (request, response) => {
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
+router.post('/create-quick-new-company', (request, response) => {
+    let { name, email, phone_number, role_id } = request.body || request.query;
+
+
+            if (!token) {
+                const uuidv4 = require('uuid').v4;
+                token = uuidv4();
+            }   
+
+
+    dboperations.createQuickNewCompany(name, email, phone_number, role_id, company_id, token)
+        .then(result => {
+            if (!result.success) {
+                return response.status(400).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /create-quick-new-user:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
 
 
 router.post('/update-quick-user', (request, response) => {

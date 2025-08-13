@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const dboperations = require('../service/objects/dboperations'); // Import the appropriate database operations module
 const e = require('express');
+const { json } = require('body-parser');
 
 
 router.post('/get-user-docs', (request, response) => {
@@ -351,6 +352,22 @@ router.post('/remove-permission', (request, response) => {
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
+router.post('/create-permission', (request, response) => {
+    const user_id = request.body.user_id;
+    const object_id = request.body.object_id;
+
+    dboperations.createPermission(user_id, object_id)
+        .then(result => {
+            if (!result.success) {
+                return response.status(404).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /create-permission:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
 
 router.post('/create-quick-object', (request, response) => {
     var {  name, address,  company} = request.query;
@@ -370,12 +387,41 @@ router.post('/create-quick-object', (request, response) => {
 });
 
 router.post('/create-object', (request, response) => {
-     const json = JSON.stringify(request.body);
+         const jsonData = request.body;
 
-    if (!json) {
+
+                 // Convert JavaScript object to JSON string
+        const jsonString = JSON.stringify({
+            company: jsonData.company_id,
+            name: jsonData.name,
+            address: jsonData.street,
+            zip_code: jsonData.zip_code || '',
+            location: jsonData.location || '',
+            description: jsonData.description || '',
+            city: jsonData.country || '',
+            state: jsonData.state || '',
+            city: jsonData.city || '',
+            price: jsonData.price || 0,
+            currency: jsonData.currency || '',
+            floors: jsonData.total_floors || 1,
+            units: jsonData.total_units || 1,
+            type: jsonData.type || 'Office',
+            img_url: jsonData.img_url || '',
+            occupancy: jsonData.occupancy || '',
+            zoning: jsonData.zoning || '',
+            country: jsonData.country || '',
+            yield_net: jsonData.yield_net || 0,
+            yield_gross: jsonData.yield_gross || 0,
+
+           
+        });
+
+
+    if (!jsonData) {
         return response.status(400).json({ success: false, message: "Missing jsonfile" });
     }
-    dboperations.createObject(json)
+    console.log("Creating object with data:", jsonString);
+    dboperations.createObject(jsonString)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -387,6 +433,55 @@ router.post('/create-object', (request, response) => {
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
+
+router.post('/update-object', (request, response) => {
+         const jsonData = request.body;
+
+
+                 // Convert JavaScript object to JSON string
+        const jsonString = JSON.stringify({
+            id: jsonData.id,
+            company: jsonData.company_id,
+            name: jsonData.name,
+            address: jsonData.street,
+            street: jsonData.street,
+            zip_code: jsonData.zip_code || '',
+            location: jsonData.location || '',
+            description: jsonData.description || '',
+            city: jsonData.country || '',
+            state: jsonData.state || '',
+            city: jsonData.city || '',
+            price: jsonData.price || 0,
+            currency: jsonData.currency || '',
+            floors: jsonData.total_floors || 1,
+            units: jsonData.total_units || 1,
+            type: jsonData.type || 'Office',
+            img_url: jsonData.img_url || '',
+            occupancy: jsonData.occupancy || '',
+            zoning: jsonData.zoning || '',
+            country: jsonData.country || '',
+            yield_net: jsonData.yield_net || 0,
+            yield_gross: jsonData.yield_gross || 0,
+        });
+
+
+    if (!jsonData) {
+        return response.status(400).json({ success: false, message: "Missing jsonfile" });
+    }
+    console.log("Updating object with data:", jsonString);
+    dboperations.updateObject(jsonString)
+        .then(result => {
+            if (!result.success) {
+                return response.status(400).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /update-object:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
+
 /*
 {
   "company": 1,
@@ -465,6 +560,50 @@ router.post('/get-all-permissions', (request, response) => {
         });
 });
 
+router.post('/get-all-occupancies', (request, response) => {
+
+    dboperations.getAllOccupancies()
+        .then(result => {
+            if (!result.success) {
+                return response.status(404).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /get-all-occupancies:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
+router.post('/get-all-zonings', (request, response) => {
+
+    dboperations.getAllZonings()
+        .then(result => {
+            if (!result.success) {
+                return response.status(404).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /get-all-zonings:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
+
+router.post('/get-all-zoning-types', (request, response) => {
+
+    dboperations.getAllTypes()
+        .then(result => {
+            if (!result.success) {
+                return response.status(404).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /get-all-types:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
+
 router.post('/get-all-object-permissions', (request, response) => {
     const object_id = request.query.id || request.body.id;
 
@@ -513,7 +652,7 @@ router.post('/get-object-units-by-id', (request, response) => {
 });
 
 router.post('/delete-object-by-id', (request, response) => {
-    const object_id = request.query.object_id;
+    const object_id = request.query.id || request.body.id;
 
 
     dboperations.deleteObjectById(object_id)
@@ -531,7 +670,7 @@ router.post('/delete-object-by-id', (request, response) => {
 
 
 router.post('/get-object-all-requests', (request, response) => {
-    const object_id = request.query.object_id;
+    const object_id = request.query.object_id || request.body.object_id;
 
   
 

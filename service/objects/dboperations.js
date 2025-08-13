@@ -449,27 +449,50 @@ async function deleteUsersFromObject(object_id) {
 
  
 
-async function removeUserFromObject(object_id, user_id) {
+async function deleteUsersFromObject(object_id) {
     try {
-
-        // console.log(contract_id, tenant_id);
-
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.remove_user_from_object(?,?)`,
-            [object_id, user_id]
+            `CALL ${process.env['DB_DATABASE']}.delete_users_from_object(?)`,
+            [contract_id]
         );
 
         const data = result[0] || [];
         return {
             success: data.length > 0,
-            message: "User removed from Object successfully",
+            message: "Users deleted from object successfully",
             data: data
         };
     } catch (error) {
-        console.error('Error in removeUserFromObject:', error);
+        console.error('Error in deleteUsersFromObject:', error);
         return {
             success: false,
-            message: "Failed to remove user from object due to a database error",
+            message: "Failed to delete users from object due to a database error",
+            data: null
+        };
+    }
+}
+
+async function deleteObjectById(object_id) {
+    try {
+
+        // console.log(contract_id, tenant_id);
+
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.delete_object_by_id(?)`,
+            [object_id]
+        );
+
+        const data = result[0] || [];
+        return {
+            success: data.length > 0,
+            message: "Object deleted successfully",
+            data: data
+        };
+    } catch (error) {
+        console.error('Error in deleteObjectByID:', error);
+        return {
+            success: false,
+            message: "Failed to delete object due to a database error",
             data: null
         };
     }
@@ -497,6 +520,31 @@ async function removePermission(permission_id) {
         return {
             success: false,
             message: "Failed to remove user from object due to a database error",
+            data: null
+        };
+    }
+}
+
+async function createPermission(user_id,object_id) {
+    try {
+
+        // console.log(contract_id, tenant_id);
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.create_permission(?,?)`,
+            [user_id,object_id]
+        );
+
+        const data = result[0] || [];
+        return {
+            success: data.length > 0,
+            message: "Permission created successfully",
+            data: data
+        };
+    } catch (error) {
+        console.error('Error in createPermission:', error);
+        return {
+            success: false,
+            message: "Failed to create permission due to a database error",
             data: null
         };
     }
@@ -580,6 +628,36 @@ async function createObject(json) {
         };
     }
 }
+
+
+async function updateObject(json) {
+    try {
+
+
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.update_object(?)`,
+            [json]
+        );
+
+        const data = result[0] || [];
+
+    //    console.log(data);
+        return {
+            success: data.length > 0,
+            message: "Object updated successfully",
+            data: data
+        };
+    } catch (error) {
+        console.error('Error in updateObject:', error);
+        return {
+            success: false,
+            message: "Failed to update object due to a database error",
+            data: null
+        };
+    }
+}
+
+
 
 async function deleteDocumentById(document_id) {
     try {
@@ -675,7 +753,75 @@ async function getAllPermissions() {
         };
     }
 }
+async function getAllOccupancies() {
+    try {
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.get_all_occupancy()`
+        );
 
+        console.log('All Occupancies Result:', result);
+        const buildings = result[0] || []; // Ensure valid data
+
+        return {
+            success: buildings.length > 0,
+            message: buildings.length > 0 ? "Occupancies retrieved successfully" : "No object occupancies found",
+            data: buildings
+        };
+    } catch (error) {
+        console.error('Error in getAllOccupancies:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve occupancies due to a database error",
+            data: []
+        };
+    }
+}
+async function getAllZonings() {
+    try {
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.get_all_zoning()`
+        );
+
+        console.log('All Zonings Result:', result);
+        const buildings = result[0] || []; // Ensure valid data
+
+        return {
+            success: buildings.length > 0,
+            message: buildings.length > 0 ? "Zonings retrieved successfully" : "No object zonings found",
+            data: buildings
+        };
+    } catch (error) {
+        console.error('Error in getAllZonings:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve zonings due to a database error",
+            data: []
+        };
+    }
+}
+async function getAllTypes() {
+    try {
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.get_all_types()`
+        );
+
+        console.log('All Types Result:', result);
+        const buildings = result[0] || []; // Ensure valid data
+
+        return {
+            success: buildings.length > 0,
+            message: buildings.length > 0 ? "Types retrieved successfully" : "No object types found",
+            data: buildings
+        };
+    } catch (error) {
+        console.error('Error in getAllTypes:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve types due to a database error",
+            data: []
+        };
+    }
+}
 async function getUserObjectPermissions(object_id,user_id) {
     try {
         const [result] = await pool.execute(
@@ -724,7 +870,28 @@ async function getObjectRecentBookings(object_id) {
         };
     }
 }
+async function removeUserFromObject(object_id, user_id) {
+    try {
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.remove_user_from_object(?, ?)`,
+            [object_id, user_id]
+        );
 
+        const data = result[0] || [];
+        return {
+            success: data.length > 0,
+            message: "User removed from object successfully",
+            data: data
+        };
+    } catch (error) {
+        console.error('Error in removeUserFromObject:', error);
+        return {
+            success: false,
+            message: "Failed to remove user from object due to a database error",
+            data: null
+        };
+    }
+}
 
 async function getObjectAllRequests(object_id) {
     try {
@@ -804,8 +971,13 @@ module.exports = {
     getObjectDocs: getObjectDocs,
     getUserDocs: getUserDocs,
     getAllPermissions: getAllPermissions,
-    removePermission: removePermission
-
+    removePermission: removePermission,
+    createPermission: createPermission,
+    getAllOccupancies   : getAllOccupancies,
+    getAllZonings: getAllZonings,
+    getAllTypes: getAllTypes,
+    updateObject: updateObject,
+    deleteObjectById: deleteObjectById
 }
 
 

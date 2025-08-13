@@ -1094,7 +1094,52 @@ async function getUsersbyObjectId(object_id) {
         };
     }
 }
+async function createQuickNewCompany(name, email, phone_number, roleID) {
+    try {
 
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.create_quick_new_company(?,?,?,?)`,
+            [name, email, phone_number, roleID]
+        );
+        
+
+        const data = result[0] || [];
+
+
+ 
+
+            if(data[0]['status']=='exists'){
+                return {
+                    success: true,
+                    message: "Company already exists",
+                    status: 0,
+                    data: data
+                };
+            }
+            if(data[0]['status']=='created'){
+                return {
+                    success: true,
+                    message: "Quick new company created successfully",
+                    status: 1,
+                    data: data
+                };
+            }
+    
+
+
+
+
+  
+    } catch (error) {
+        console.error('Error in createQuickNewUser:', error);
+        return {
+            success: false,
+            message: "Failed to create quick new user due to a database error",
+            status: 2,
+            data: null
+        };
+    }
+}
 
 async function createQuickNewUser(first_name, last_name, email, phone_number,roleID, companyID,token) {
     try {
