@@ -122,15 +122,19 @@ async function registerUser(user) {
     }
 }
 
-async function RegisterCompany(company) {
+async function RegisterUpdateCompany(company) {
     try {
 
 
-        const {  company_id, first_name, last_name,email,password } = company;
+        const { id, company_id, name,email,phone_number,role_id,country } = company;
 
+        console.log('RegisterUpdateCompany:', company);
+        console.log('Company ID:', id);
+        console.log('Role ID:', role_id);
+        const roleid = role_id ?? '1'; // Default to 1 if role_id is not provided
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.register_update_company(?,?,?,?,?)`,
-            [ email,password,first_name,last_name,company_id]
+            `CALL ${process.env['DB_DATABASE']}.register_update_company(?,?,?,?,?,?)`,
+            [ email,name,phone_number,country,roleid,id]
         );
 
         // Fix: Ensure that only the first item is returned
@@ -1094,12 +1098,13 @@ async function getUsersbyObjectId(object_id) {
         };
     }
 }
-async function createQuickNewCompany(name, email, phone_number, roleID) {
+async function createQuickNewCompany(name, email, phone_number, city, country, roleID) {
     try {
 
+        console.log('createQuickNewCompany:', name, email, phone_number, city, country, roleID);
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.create_quick_new_company(?,?,?,?)`,
-            [name, email, phone_number, roleID]
+            `CALL ${process.env['DB_DATABASE']}.create_quick_new_company(?,?,?,?,?,?)`,
+            [name, email, phone_number, city, country, roleID]
         );
         
 
@@ -1417,7 +1422,7 @@ module.exports = {
     createUserNotificationAndSendPush: createUserNotificationAndSendPush,
     deleteUserObjectPost: deleteUserObjectPost,
     validateCompanyInvitationToken: validateCompanyInvitationToken,
-    RegisterCompany: RegisterCompany,
+    RegisterUpdateCompany: RegisterUpdateCompany,
     getCompanyByEmail: getCompanyByEmail,
     getCompanyById: getCompanyById,
     getUsersByCompanyId: getUsersByCompanyId,
@@ -1434,6 +1439,7 @@ module.exports = {
     deleteUserbyId: deleteUserbyId,
     getUserDocs: getUserDocs,
     getUserInvitationCode: getUserInvitationCode,
-    updateUserInvitationCode: updateUserInvitationCode
+    updateUserInvitationCode: updateUserInvitationCode,
+    createQuickNewCompany:createQuickNewCompany
 }
 

@@ -753,6 +753,30 @@ async function getAllPermissions() {
         };
     }
 }
+
+async function getAllBookingCategories() {
+    try {
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.get_all_booking_categories()`
+        );
+
+        console.log('All Booking Categories Result:', result);
+        const buildings = result[0] || []; // Ensure valid data
+
+        return {
+            success: buildings.length > 0,
+            message: buildings.length > 0 ? "Booking categories retrieved successfully" : "No booking categories found",
+            data: buildings
+        };
+    } catch (error) {
+        console.error('Error in getAllBookingCategories:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve booking categories due to a database error",
+            data: []
+        };
+    }
+}
 async function getAllOccupancies() {
     try {
         const [result] = await pool.execute(
@@ -977,7 +1001,8 @@ module.exports = {
     getAllZonings: getAllZonings,
     getAllTypes: getAllTypes,
     updateObject: updateObject,
-    deleteObjectById: deleteObjectById
+    deleteObjectById: deleteObjectById,
+    getAllBookingCategories: getAllBookingCategories,
 }
 
 

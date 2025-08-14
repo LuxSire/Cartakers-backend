@@ -560,9 +560,9 @@ router.post('/get-all-permissions', (request, response) => {
         });
 });
 
-router.post('/get-all-occupancies', (request, response) => {
+router.post('/get-all-permissions', (request, response) => {
 
-    dboperations.getAllOccupancies()
+    dboperations.getAllPermissions()
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -570,7 +570,20 @@ router.post('/get-all-occupancies', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /get-all-occupancies:", error);
+            console.error("Error in /get-all-permissions:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
+router.post('/get-all-bookingo-categories', (request, response) => {
+    dboperations.getAllBookingCategories()
+        .then(result => {
+            if (!result.success) {
+                return response.status(404).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /get-all-booking-categories:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });

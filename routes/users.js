@@ -382,13 +382,13 @@ router.post('/register-user', (request, response) => {
         });
 });
 
-router.post('/register-company', (request, response) => {
-    const company = request.body.company;
+router.post('/register-update-company', (request, response) => {
+    const company = request.body.company || request.query.company;;
 
     console.log(company);
 
 
-    dboperations.RegisterCompany(company)
+    dboperations.RegisterUpdateCompany(company)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -1204,16 +1204,11 @@ router.post('/create-quick-new-user', (request, response) => {
         });
 });
 router.post('/create-quick-new-company', (request, response) => {
-    let { name, email, phone_number, role_id } = request.body || request.query;
+    let { name, email, phone_number, role_id,company_id ,city,country} = request.body || request.query;
 
+ 
 
-            if (!token) {
-                const uuidv4 = require('uuid').v4;
-                token = uuidv4();
-            }   
-
-
-    dboperations.createQuickNewCompany(name, email, phone_number, role_id, company_id, token)
+    dboperations.createQuickNewCompany(name, email, phone_number, city, country, role_id)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -1221,7 +1216,7 @@ router.post('/create-quick-new-company', (request, response) => {
             response.json(result);
         })
         .catch(error => {
-            console.error("Error in /create-quick-new-user:", error);
+            console.error("Error in /create-quick-new-company:", error);
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
