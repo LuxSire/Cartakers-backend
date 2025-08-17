@@ -3,7 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const admin = require("firebase-admin");
+const admin = require("./service/firebase");
 const crypto = require('crypto');
 const { translateText } = require("./translation"); // Import the translation service
 const axios = require("axios"); //  Import axios
@@ -40,8 +40,112 @@ app.use('/api/mailing', mailingRouter);
 app.use('/api/ai', aiRouter);
 app.use('/api/objects', objectsRouter);
 
+const { v4: uuidv4 } = require('uuid'); // Add at the top if not already imported
+
+
+
+app.post('/api/objects/get-all-object-messages', async (req, res) => {
+        const { object_id } = req.body;
+    console.log('Received request for messages of object:', object_id);
+
+
+    if (!id) {
+        return res.status(400).json({ error: 'JSON must include an "id" field.' });
+    }
+
+   
+    try {
+        const messagesRef = admin.firestore()
+            .collection('ChatObject')
+            .doc(id.toString())
+            .collection('messages');
+
+        const snapshot = await messagesRef.orderBy('timestamp', 'asc').get(); // Optional: order by timestamp
+
+        const messages = [];
+        snapshot.forEach(doc => {
+            messages.push({ id: doc.id, ...doc.data() });
+        });
+
+        res.status(200).json({ success: true, messages });
+    } catch (error) {
+        console.error('Error retrieving chat message:', error);
+        res.status(500).json({ error: 'Failed to retrieve chat message' });
+    }
+});
+
+app.post('/api/objects/get-all-messages', async (req, res) => {
+      
+
+ 
+    try {
+        // Collection group query: gets all docs in any 'messages' subcollection under any ChatObject
+        const messagesRef = admin.firestore().collectionGroup('messages');
+        const snapshot = await messagesRef.orderBy('timestamp', 'asc').get();
+
+        const messages = [];
+        snapshot.forEach(doc => {
+            messages.push({ id: doc.id, ...doc.data() });
+        });
+
+        res.status(200).json({ success: true, messages });
+    } catch (error) {
+        console.error('Error retrieving all chat messages:', error);
+        res.status(500).json({ error: 'Failed to retrieve all chat messages' });
+    }
+});
 
 // Generate Firebase Custom Token
+app.post('/api/chatobject/send-message', async (req, res) => {
+    const messageData = req.body;
+    console.log('Received chat message data:', messageData);
+    if (!messageData || !messageData.id) {
+        return res.status(400).json({ error: 'JSON must include an "id" field.' });
+    }
+
+    const chatId = messageData.id?.toString();
+    const uniqueDocId = uuidv4(); // Generate a unique document name
+
+    try {
+        await admin.firestore()
+            .collection('ChatObject')
+            .doc(chatId)
+            .collection('messages')
+            .doc(uniqueDocId)
+            .set(messageData);
+
+        res.status(200).json({ success: true, docId: uniqueDocId });
+    } catch (error) {
+        console.error('Error saving chat message:', error);
+        res.status(500).json({ error: 'Failed to save chat message' });
+    }
+});
+// Generate Firebase Custom Token
+app.post('/api/chatcompany/send-message', async (req, res) => {
+    const messageData = req.body;
+    console.log('Received chat message data:', messageData);
+    if (!messageData || !messageData.id) {
+        return res.status(400).json({ error: 'JSON must include an "id" field.' });
+    }
+
+    const chatId = messageData.id?.toString();
+    const uniqueDocId = uuidv4(); // Generate a unique document name
+
+    try {
+        await admin.firestore()
+            .collection('ChatCompany')
+            .doc(chatId)
+            .collection('messages')
+            .doc(uniqueDocId)
+            .set(messageData);
+
+        res.status(200).json({ success: true, docId: uniqueDocId });
+    } catch (error) {
+        console.error('Error saving chat message:', error);
+        res.status(500).json({ error: 'Failed to save chat message' });
+    }
+});
+
 app.post('/api/firebase/custom-token', async (req, res) => {
     const { userId } = req.body;
 

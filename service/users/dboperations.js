@@ -86,9 +86,9 @@ async function registerUser(user) {
     try {
 
         console.log('registerUser:', user);
-        const {  email, first_name, last_name, phone, country, password } = user.user;
+        const {  email, first_name, last_name, phone, country, password } = user;
 
-
+        console.log('Registering user with email:', email);
                 // Get user by email to extract user_id
         const userResult = await getUserByEmail(email);
         let user_id = null;
@@ -98,10 +98,10 @@ async function registerUser(user) {
 
         console.log('User Results:', userResult);
 
-        console.log('User ID:', id);
+        console.log('User ID:', user_id);
         const [result] = await pool.execute(
             `CALL ${process.env['DB_DATABASE']}.register_update_user(?,?,?,?,?)`,
-            [email, password, first_name, last_name,  id]
+            [email, password, first_name, last_name,  user_id]
         );
         
         // Fix: Ensure that only the first item is returned
