@@ -353,10 +353,11 @@ router.post('/remove-permission', (request, response) => {
         });
 });
 router.post('/create-permission', (request, response) => {
-    const user_id = request.body.user_id;
-    const object_id = request.body.object_id;
+    const user_id = request.query.user_id;
+    const object_id = request.query.object_id;
+    const role_id = request.query.role_id;
 
-    dboperations.createPermission(user_id, object_id)
+    dboperations.createPermission(user_id, object_id, role_id)
         .then(result => {
             if (!result.success) {
                 return response.status(404).json(result);
@@ -602,6 +603,20 @@ router.post('/get-all-zonings', (request, response) => {
         });
 });
 
+router.post('/get-all-updates', (request, response) => {
+
+    dboperations.getAllUpdates()
+        .then(result => {
+            if (!result.success) {
+                return response.status(404).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /get-all-updates:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
 router.post('/get-all-zoning-types', (request, response) => {
 
     dboperations.getAllTypes()

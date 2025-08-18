@@ -525,13 +525,13 @@ async function removePermission(permission_id) {
     }
 }
 
-async function createPermission(user_id,object_id) {
+async function createPermission(user_id,object_id,role_id) {
     try {
 
-        // console.log(contract_id, tenant_id);
+        console.log(user_id, object_id, role_id);
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.create_permission(?,?)`,
-            [user_id,object_id]
+            `CALL ${process.env['DB_DATABASE']}.create_permission(?,?,?)`,
+            [user_id,object_id,role_id]
         );
 
         const data = result[0] || [];
@@ -823,6 +823,29 @@ async function getAllZonings() {
         };
     }
 }
+async function getAllUpdates() {
+    try {
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.get_all_updates()`
+        );
+
+        console.log('All Updates Result:', result);
+        const buildings = result[0] || []; // Ensure valid data
+
+        return {
+            success: buildings.length > 0,
+            message: buildings.length > 0 ? "Updates retrieved successfully" : "No object updates found",
+            data: buildings
+        };
+    } catch (error) {
+        console.error('Error in getAllUpdates:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve updates due to a database error",
+            data: []
+        };
+    }
+}
 async function getAllTypes() {
     try {
         const [result] = await pool.execute(
@@ -1003,6 +1026,7 @@ module.exports = {
     updateObject: updateObject,
     deleteObjectById: deleteObjectById,
     getAllBookingCategories: getAllBookingCategories,
+    getAllUpdates:getAllUpdates
 }
 
 

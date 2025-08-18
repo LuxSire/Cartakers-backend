@@ -67,7 +67,7 @@ app.post('/api/objects/get-all-object-messages', async (req, res) => {
             messages.push({ id: doc.id, ...doc.data() });
         });
 
-        res.status(200).json({ success: true, messages });
+        res.status(200).json({ success: true, data: messages });
     } catch (error) {
         console.error('Error retrieving chat message:', error);
         res.status(500).json({ error: 'Failed to retrieve chat message' });
@@ -76,19 +76,20 @@ app.post('/api/objects/get-all-object-messages', async (req, res) => {
 
 app.post('/api/objects/get-all-messages', async (req, res) => {
       
-
+    console.log('Received request for all chat messages');
  
     try {
         // Collection group query: gets all docs in any 'messages' subcollection under any ChatObject
         const messagesRef = admin.firestore().collectionGroup('messages');
-        const snapshot = await messagesRef.orderBy('timestamp', 'asc').get();
-
+        const snapshot = await messagesRef.get();
+        console.log('Retrieved messages:', snapshot.size);
         const messages = [];
         snapshot.forEach(doc => {
             messages.push({ id: doc.id, ...doc.data() });
         });
-
-        res.status(200).json({ success: true, messages });
+        messages.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        console.log('All Retrieved messages:', messages);
+        res.status(200).json({ success: true, data: messages });
     } catch (error) {
         console.error('Error retrieving all chat messages:', error);
         res.status(500).json({ error: 'Failed to retrieve all chat messages' });
@@ -105,6 +106,9 @@ app.post('/api/chatobject/send-message', async (req, res) => {
 
     const chatId = messageData.id?.toString();
     const uniqueDocId = uuidv4(); // Generate a unique document name
+    // Add timestamp field
+    messageData.timestamp = Date.now();
+    messageData.object_id = chatId;
 
     try {
         await admin.firestore()
@@ -130,7 +134,8 @@ app.post('/api/chatcompany/send-message', async (req, res) => {
 
     const chatId = messageData.id?.toString();
     const uniqueDocId = uuidv4(); // Generate a unique document name
-
+    messageData.timestamp = Date.now();
+    messageData.company_id = chatId;
     try {
         await admin.firestore()
             .collection('ChatCompany')
