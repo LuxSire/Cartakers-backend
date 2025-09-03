@@ -24,7 +24,38 @@ const app = express();
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(cors());
+/*
+app.use(cors({
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl)
+        console.log('CORS request from:', origin); // <--- Add this line
+        if (!origin) return callback(null, true);
+
+        // Allow Azure frontend
+        if (origin === "https://xm-frontend-cyhyftfta6fehzhh.francecentral-01.azurewebsites.net") {
+            return callback(null, true);
+        }
+
+        // Allow any localhost port
+        if (/^http:\/\/localhost:\d+$/.test(origin)) {
+            return callback(null, true);
+        }
+
+        // Otherwise, block
+        return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
+*/
+
+app.use(cors({
+    origin: true,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
 
 // Import your routes
 

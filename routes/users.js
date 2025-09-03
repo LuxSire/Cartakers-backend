@@ -712,14 +712,14 @@ router.post('/update-user-field', (request, response) => {
 */
 
 router.post('/update-user-personal-details', (request, response) => {
-    const { user_id, first_name, last_name, display_name, phone_number, country_code, profile_pic } = request.body || request.query;
+    const { user_id, first_name, last_name, display_name, phone_number, country_code, profile_pic,company_id,role_id } = request.body || request.query;
 
-    dboperations.updateUserPersonalDetails(user_id,first_name,last_name, display_name, phone_number, country_code, profile_pic)
+    dboperations.updateUserPersonalDetails(user_id,first_name,last_name, display_name, phone_number, country_code, profile_pic,company_id,role_id)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
             }
-
+            
     
             response.json(result);
         })
@@ -1098,6 +1098,22 @@ router.post('/delete-user-by-id', (request, response) => {
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
+router.post('/delete-company-by-id', (request, response) => {
+    const company_id = request.query.company_id || request.body.company_id;
+
+    dboperations.deleteCompanyById(company_id)
+        .then(result => {
+            if (!result.success) {
+                return response.status(400).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /delete-company-by-id:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
+
 router.post('/get-all-users-by-object', (request, response) => {
     const object_id = request.query.object_id;
 

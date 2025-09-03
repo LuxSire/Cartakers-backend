@@ -32,6 +32,29 @@ async function deleteUserbyId(user_id) {
     }
 }
 
+async function deleteCompanyById(company_id) {
+    try {
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.delete_company_by_id(?)`,
+            [company_id]
+        );
+
+        const data = result[0] || [];
+        return {
+            success: data.length > 0,
+            message: "Company deleted successfully",
+            data: data
+        };
+    } catch (error) {
+        console.error('Error in deleteCompanyById:', error);
+        return {
+            success: false,
+            message: "Failed to delete company due to a database error",
+            data: null
+        };
+    }
+}
+
 
 //// start flutter calls 
 
@@ -493,7 +516,7 @@ async function createUserObjectPostMedia(post_id, media_url) {
     }
 }
 
-async function updateUserPersonalDetails(user_id, first_name,last_name,display_name, phone_number, country_code, profile_pic) {
+async function updateUserPersonalDetails(user_id, first_name,last_name,display_name, phone_number, country_code, profile_pic,company_id,role_id) {
     try {
       // Replace undefined with null for all parameters
         const params = [
@@ -503,11 +526,13 @@ async function updateUserPersonalDetails(user_id, first_name,last_name,display_n
             display_name ?? null,
             phone_number ?? null,
             country_code ?? 'IT',
-            profile_pic ?? null
+            profile_pic ?? null,
+            company_id ?? null,
+            role_id ?? 1
         ];
 
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.update_user_personal_details(?,?,?,?,?,?,?)`,
+            `CALL ${process.env['DB_DATABASE']}.update_user_personal_details(?,?,?,?,?,?,?,?,?)`,
             params
         );
         const data = result[0] || [];
@@ -1440,6 +1465,7 @@ module.exports = {
     getUserDocs: getUserDocs,
     getUserInvitationCode: getUserInvitationCode,
     updateUserInvitationCode: updateUserInvitationCode,
-    createQuickNewCompany:createQuickNewCompany
+    createQuickNewCompany:createQuickNewCompany,
+    deleteCompanyById: deleteCompanyById
 }
 

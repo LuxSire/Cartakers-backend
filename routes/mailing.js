@@ -208,6 +208,55 @@ router.post("/email-user-mail", async (req, res) => {
     }
 });
 
+router.post("/send-smtp-invitation-email", async (req, res) => {
+    try {
+        const { email, greetings, body_text, body2_title_text, body2_text, subject, lang } = req.body;
+
+        // Optionally translate text here if needed
+        const translatedAvailableOn = await translateText(`Available on:`, lang);
+        const translatedHelpText = await translateText(`Help?`, lang);  
+        const translatedSupport = await translateText(`Support`, lang);
+
+        // Load email template
+        let emailTemplate = fs.readFileSync(path.join(__dirname, "../templates/user-mail.html"), "utf8");
+
+        // Replace placeholders
+        emailTemplate = emailTemplate.replace("[GREETINGS-TEXT]", greetings)
+            .replace("[BODY-TEXT]", body_text)
+            .replace("[BODY2-TITLE-TEXT]", body2_title_text)
+            .replace("[BODY2-TEXT]", body2_text)
+            .replace("[DOWNLOAD-NOW-TEXT]", translatedAvailableOn)
+            .replace("[HELP-TEXT]", translatedHelpText)
+            .replace("[SUPPORT-TEXT]", translatedSupport);
+
+        // Setup nodemailer transporter for Gmail
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            port: 465,
+            secure: true,
+            auth: {
+                user: process.env.GMAIL_USER,      // Your Gmail address from .env
+                pass: process.env.GMAIL_PASS       // Your Gmail app password from .env
+            }
+        });
+
+        const mailOptions = {
+            from: process.env.GMAIL_USER,
+    
+            to: email,
+            subject: subject,
+            html: emailTemplate
+        };
+
+        // Send Email
+        const info = await transporter.sendMail(mailOptions);
+        console.log('Email sent:', info.response);
+        res.status(200).json({ success: true, message: 'Email sent successfully', data: [{email, success: true}] });
+    } catch (error) {
+        console.error('Email sending error:', error);
+        res.status(500).json({ success: false, message: 'Failed to send email', data: [] });
+    }
+});
 
 router.post("/send-user-invitation-email", async (req, res) => {
     try {

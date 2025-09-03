@@ -369,6 +369,60 @@ async function updateObjectDetails(object_id, name, street, zip_code, location, 
         };
     }
 }
+
+async function updateUnitDetails(unit_id, description,sqm) {
+    try {
+
+
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.update_unit_details(?,?,?)`,
+            [unit_id, description,sqm]
+        );
+
+        const data = result[0] || [];
+
+        console.log(data);
+        return {
+            success: data.length > 0,
+            message: "Unit details updated successfully",
+            data: data
+        };
+    } catch (error) {
+        console.error('Error in updateUnitDetails:', error);
+        return {
+            success: false,
+            message: "Failed to update unit details due to a database error",
+            data: null
+        };
+    }
+}
+async function createUnit(object_id) {
+    try {
+
+
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.create_unit(?)`,
+            [object_id]
+        );
+
+        const data = result[0] || [];
+
+        console.log(data);
+        return {
+            success: data.length > 0,
+            message: "Unit created successfully",
+            data: data
+        };
+    } catch (error) {
+        console.error('Error in createUnit:', error);
+        return {
+            success: false,
+            message: "Failed to create unit due to a database error",
+            data: null
+        };
+    }
+}
+
 async function updateObjectField(object_id, table, field,value) {
     try {
 
@@ -497,6 +551,33 @@ async function deleteObjectById(object_id) {
         };
     }
 }
+
+async function deleteUnitById(unit_id) {
+    try {
+
+        // console.log(contract_id, tenant_id);
+
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.delete_unit_by_id(?)`,
+            [unit_id]
+        );
+
+        const data = result[0] || [];
+        return {
+            success: data.length > 0,
+            message: "Unit deleted successfully",
+            data: data
+        };
+    } catch (error) {
+        console.error('Error in deleteUnitById:', error);
+        return {
+            success: false,
+            message: "Failed to delete unit due to a database error",
+            data: null
+        };
+    }
+}
+
 
 
 
@@ -800,6 +881,76 @@ async function getAllOccupancies() {
         };
     }
 }
+async function getAllStatus() {
+    try {
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.get_all_statuses()`
+        );
+
+        console.log('All Statuses Result:', result);
+        const buildings = result[0] || []; // Ensure valid data
+
+        return {
+            success: buildings.length > 0,
+            message: buildings.length > 0 ? "Statuses retrieved successfully" : "No object statuses found",
+            data: buildings
+        };
+    } catch (error) {
+        console.error('Error in getAllStatuses:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve statuses due to a database error",
+            data: []
+        };
+    }
+}
+async function getAllCountries() {
+    try {
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.get_all_countries()`
+        );
+
+        console.log('All Countries Result:', result);
+        const countries = result[0] || []; // Ensure valid data
+
+        return {
+            success: countries.length > 0,
+            message: countries.length > 0 ? "Countries retrieved successfully" : "No object countries found",
+            data: countries
+        };
+    } catch (error) {
+        console.error('Error in getAllCountries:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve countries due to a database error",
+            data: []
+        };
+    }
+}
+async function getAllCurrencies() {
+    try {
+        const [result] = await pool.execute(
+            `CALL ${process.env['DB_DATABASE']}.get_all_currencies()`
+        );
+
+        console.log('All Currencies Result:', result);
+        const currencies = result[0] || []; // Ensure valid data
+
+        return {
+            success: currencies.length > 0,
+            message: currencies.length > 0 ? "Currencies retrieved successfully" : "No object currencies found",
+            data: currencies
+        };
+    } catch (error) {
+        console.error('Error in getAllCurrencies:', error);
+        return {
+            success: false,
+            message: "Failed to retrieve currencies due to a database error",
+            data: []
+        };
+    }
+}
+ 
 async function getAllZonings() {
     try {
         const [result] = await pool.execute(
@@ -1026,7 +1177,13 @@ module.exports = {
     updateObject: updateObject,
     deleteObjectById: deleteObjectById,
     getAllBookingCategories: getAllBookingCategories,
-    getAllUpdates:getAllUpdates
+    getAllUpdates:getAllUpdates,
+    deleteUnitById: deleteUnitById,
+    updateUnitDetails: updateUnitDetails,
+    createUnit: createUnit,
+    getAllCountries: getAllCountries,
+    getAllCurrencies: getAllCurrencies,
+    getAllStatus: getAllStatus
 }
 
 

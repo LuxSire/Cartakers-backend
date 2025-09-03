@@ -262,6 +262,41 @@ router.post('/update-object-details', (request, response) => {
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
+
+router.post('/update-unit-details', (request, response) => {
+    const { unit_id, description,sqm } = request.body;
+
+
+    dboperations.updateUnitDetails(unit_id,description,sqm)
+        .then(result => {
+            if (!result.success) {
+                return response.status(400).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /update-unit-details:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
+
+router.post('/create-unit', (request, response) => {
+        const { object_id } = request.body;
+
+
+    dboperations.createUnit(object_id)
+        .then(result => {
+            if (!result.success) {
+                return response.status(400).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /update-unit-details:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
+
 router.post('/update-object-field', (request, response) => {
     const { object_id, table, field,value } = request.query;
 
@@ -353,10 +388,12 @@ router.post('/remove-permission', (request, response) => {
         });
 });
 router.post('/create-permission', (request, response) => {
-    const user_id = request.query.user_id;
-    const object_id = request.query.object_id;
-    const role_id = request.query.role_id;
 
+    const user_id = request.body.user_id || request.query.user_id;
+    const object_id = request.body.object_id || request.query.object_id;
+    const role_id = request.body.role_id || request.query.role_id;
+
+    console.log("Creating permission for user:", user_id, object_id, role_id);
     dboperations.createPermission(user_id, object_id, role_id)
         .then(result => {
             if (!result.success) {
@@ -602,6 +639,64 @@ router.post('/get-all-zonings', (request, response) => {
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
+router.post('/get-all-occupancies', (request, response) => {
+
+    dboperations.getAllOccupancies()
+        .then(result => {
+            if (!result.success) {
+                return response.status(404).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /get-all-occupancies:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
+router.post('/get-all-status', (request, response) => {
+
+    dboperations.getAllStatus()
+        .then(result => {
+            if (!result.success) {
+                return response.status(404).json(result);
+            }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /get-all-status:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
+router.post('/get-all-countries', (request, response) => {
+
+    dboperations.getAllCountries()
+        .then(result => {
+            if (!result.success) {
+                return response.status(404).json(result);
+            }
+            response.json(result);          
+            
+        })
+        .catch(error => {
+            console.error("Error in /get-all-countries:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
+router.post('/get-all-currencies', (request, response) => {
+
+    dboperations.getAllCurrencies()
+        .then(result => {
+            if (!result.success) {
+                return response.status(404).json(result);
+            }
+            response.json(result);          
+            
+        })
+        .catch(error => {
+            console.error("Error in /get-all-currencies:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
 
 router.post('/get-all-updates', (request, response) => {
 
@@ -696,6 +791,21 @@ router.post('/delete-object-by-id', (request, response) => {
         });
 });
 
+router.post('/delete-unit-by-id', (request, response) => {
+    const unit_id = request.query.id || request.body.id;
+
+    dboperations.deleteUnitById(unit_id)
+        .then(result => {
+            // if (!result.success) {
+            //     return response.status(404).json(result);
+            // }
+            response.json(result);
+        })
+        .catch(error => {
+            console.error("Error in /delete-unit-by-id:", error);
+            response.status(500).json({ success: false, message: "Internal server error" });
+        });
+});
 
 router.post('/get-object-all-requests', (request, response) => {
     const object_id = request.query.object_id || request.body.object_id;
