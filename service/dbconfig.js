@@ -16,12 +16,17 @@ const config = {
     port: 3306,
     ssl: {
         rejectUnauthorized: true,
-        ca: serverCa
+     //  ca: serverCa
     }
 };
 
 // Create a single MySQL connection pool
 const pool = mysql.createPool(config);
+
+pool.getConnection().catch(err => {
+  console.error('DB connect error:', err.code, err.message);
+});
+
 
 // Export the pool for use in other modules
 module.exports = pool;
