@@ -488,6 +488,7 @@ router.post('/update-object', (request, response) => {
             description: jsonData.description || '',
             city: jsonData.country || '',
             state: jsonData.state || '',
+            status: jsonData.status || '',
             city: jsonData.city || '',
             price: jsonData.price || 0,
             currency: jsonData.currency || '',

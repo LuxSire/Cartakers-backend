@@ -424,8 +424,9 @@ router.post('/get-user-by-email', (request, response) => {
     const email = request.query.email || request.body.email;
 
    console.log(request);
-   console.log(email);
+   console.log(email);      
 
+    console.log('getUserByEmail', email)
     dboperations.getUserByEmail(email )
         .then(result => {
             if (!result.success) {
@@ -769,9 +770,11 @@ router.post('/update-user-object-request-status', (request, response) => {
 });
 
 router.post('/update-user-reset-password-code', (request, response) => {
-    const { email, reset_code } = request.query;
+    
+    const email = request.body.email || request.query.email;
+    const reset_code = request.body.reset_code || request.query.reset_code;
 
-
+    console.log("updateUserResetPasswordCode", email, reset_code);
     dboperations.updateUserResetPasswordCode(email, reset_code)
         .then(result => {
             if (!result.success) {
@@ -825,8 +828,8 @@ router.post('/update-user-device-token', (request, response) => {
 });
 
 router.post('/get-user-by-reset-code', (request, response) => {
-    const email = request.query.email;
-    const reset_code = request.query.reset_code;
+    const email = request.query.email || request.body.email;
+    const reset_code = request.query.reset_code || request.body.reset_code;
 
 
     dboperations.getUserByResetCode(email, reset_code)
@@ -844,8 +847,8 @@ router.post('/get-user-by-reset-code', (request, response) => {
 
 
 router.post('/update-user-password', (request, response) => {
-    const { user_id, password } = request.query;
-
+    const user_id = request.query.user_id || request.body.user_id;
+    const password = request.query.password || request.body.password;
 
     dboperations.updateUserPassword(user_id, password)
         .then(result => {

@@ -87,6 +87,53 @@ router.post("/email-user-reset-password", async (req, res) => {
     }
 });
 
+router.post("/send-smtp-user-reset-password", async (req, res) => {
+    try {
+        const { email, greetings, body_text, reset_code_text, reset_code, available_on_text, help_text, support_text, subject } = req.body;
+
+        // Load email template
+        let emailTemplate = fs.readFileSync(path.join(__dirname, "../templates/user-reset-user-password.html"), "utf8");
+
+        // Replace placeholders
+        emailTemplate = emailTemplate.replace("[GREETINGS-TEXT]", greetings)
+            .replace("[BODY-TEXT]", body_text)
+            .replace("[RESET-CODE-TEXT]", reset_code_text)
+            .replace("[RESET-CODE]", reset_code)
+            .replace("[DOWNLOAD-NOW-TEXT]", available_on_text)
+            .replace("[HELP-TEXT]", help_text)
+            .replace("[SUPPORT-TEXT]", support_text);
+
+        // Setup nodemailer transporter for Gmail
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            port: 465,
+            secure: true,
+            auth: {
+                user: process.env.GMAIL_USER,      // Your Gmail address from .env
+                pass: process.env.GMAIL_PASS       // Your Gmail app password from .env
+            }
+        });
+
+        const mailOptions = {
+            from: process.env.GMAIL_USER,
+    
+            to: email,
+            subject: subject,
+            html: emailTemplate
+        };
+
+        // Send Email
+        const info = await transporter.sendMail(mailOptions);
+        console.log('Email sent:', info.response);
+
+
+        console.log("Email sent successfully");
+        res.status(200).json({ success: true, message: "Email sent successfully", data: [{email, success: true}] });
+    } catch (error) {
+        console.error("Email sending error:", error);
+        res.status(500).json({ success: false, message: "Failed to send email", data: [] });
+    }
+});
 
 router.post("/email-user-booking-reminder", async (req, res) => {
     try {
