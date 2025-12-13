@@ -5,3 +5,4 @@ tenants10-eeb67c812094.json
 secrets/
 .env
 .env.local
+*.json

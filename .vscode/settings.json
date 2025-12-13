@@ -1,0 +1,8 @@
+{
+    "appService.zipIgnorePattern": [
+        "node_modules{,/**}",
+        ".vscode{,/**}"
+    ],
+    "appService.defaultWebAppToDeploy": "/subscriptions/7ebdc032-3bff-42d3-a685-786d81611274/resourceGroups/Dev-RG/providers/Microsoft.Web/sites/xm-backend-api",
+    "appService.deploySubpath": "."
+}
