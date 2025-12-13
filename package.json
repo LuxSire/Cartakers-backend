@@ -1,6 +1,6 @@
 {
 
-  "name": "XM-api",
+  "name": "Cartakers-api",
 
   "version": "0.1.1",
 
@@ -67,6 +67,10 @@
     "request": "^2.88.2",
 
     "stripe": "^16.10.0",
+
+    "swagger-jsdoc": "^6.2.8",
+
+    "swagger-ui-express": "^5.0.1",
 
     "xlsx": "^0.18.5"
 

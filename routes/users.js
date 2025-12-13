@@ -6,6 +6,12 @@ const dboperations = require('../service/users/dboperations'); // Import the app
 const heicConvert = require('heic-convert');
 
 
+/**
+ * @swagger
+ * tags:
+ *   name: Users
+ *   description: User management and related operations
+ */
 // Azure Storage settings
 const { BlobServiceClient,  generateBlobSASQueryParameters ,StorageSharedKeyCredential, newPipeline, BlobSASPermissions } = require("@azure/storage-blob");
 const accountName =  process.env['AZURE_BLOB_NAME'];
@@ -75,6 +81,41 @@ const e = require('express');
 //     }
 //   });
 
+/**
+ * @swagger
+ * /api/users/delete-user-media:
+ *   delete:
+ *     summary: Delete a user media file
+ *     tags: [Users]
+ *     parameters:
+ *       - in: query
+ *         name: containerName
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Azure container name
+ *       - in: query
+ *         name: directoryName
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Directory name or URL
+ *       - in: query
+ *         name: fileName
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: File name to delete
+ *     responses:
+ *       200:
+ *         description: File deleted successfully
+ *       400:
+ *         description: Missing required parameters
+ *       404:
+ *         description: File not found
+ *       500:
+ *         description: Internal server error
+ */
 router.delete('/delete-user-media', async (req, res) => {
     // Accept metadata from either query or body for flexibility
     let { containerName, directoryName, fileName } = { ...req.body, ...req.query };
@@ -137,6 +178,38 @@ router.delete('/delete-user-media', async (req, res) => {
 });
 
 
+/**
+ * @swagger
+ * /api/users/upload-user-media:
+ *   post:
+ *     summary: Upload a user media file
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *               containerName:
+ *                 type: string
+ *               contentType:
+ *                 type: string
+ *               directoryName:
+ *                 type: string
+ *               newFileName:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: File uploaded successfully
+ *       400:
+ *         description: No file uploaded or missing parameters
+ *       500:
+ *         description: Internal server error
+ */
 router.post('/upload-user-media', upload.single('file'), async (req, res) => {
     const uploadedFile = req.file;
     // Accept metadata from either query or body for flexibility
@@ -219,7 +292,30 @@ router.post('/upload-user-media', upload.single('file'), async (req, res) => {
     }
 });
 
-  router.delete('/delete-user-directory', async (req, res) => {
+/**
+ * @swagger
+ * /api/users/delete-user-directory:
+ *   delete:
+ *     summary: Delete a user directory and its files
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               containerName:
+ *                 type: string
+ *               directoryName:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Directory and its files deleted successfully
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/delete-user-directory', async (req, res) => {
 
    const { containerName, directoryName } = req.body;
 
@@ -246,7 +342,34 @@ router.post('/upload-user-media', upload.single('file'), async (req, res) => {
 
 
   // also for any file, documents
-  router.delete('/delete-profile-file', async (req, res) => {
+/**
+ * @swagger
+ * /api/users/delete-profile-file:
+ *   delete:
+ *     summary: Delete a user profile file
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               containerName:
+ *                 type: string
+ *               fileName:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: File deleted successfully
+ *       400:
+ *         description: Missing parameters
+ *       404:
+ *         description: File not found
+ *       500:
+ *         description: Internal server error
+ */
+router.delete('/delete-profile-file', async (req, res) => {
     const { containerName, fileName } = req.body;
 
     // console.log(req.body);
@@ -282,6 +405,29 @@ router.post('/upload-user-media', upload.single('file'), async (req, res) => {
 });
 
 
+/**
+ * @swagger
+ * /api/users/g-tk-az-media:
+ *   post:
+ *     summary: Generate Azure SAS token for a blob
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               containerName:
+ *                 type: string
+ *               blobName:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: SAS token generated
+ *       500:
+ *         description: Internal server error
+ */
 router.post('/g-tk-az-media', async (req, res) => {
     const { containerName, blobName } = req.body;
 
@@ -327,6 +473,29 @@ async function generateSasToken(containerName, blobName) {
 
 
 // Validate User Invitation Token
+/**
+ * @swagger
+ * /api/users/validate-user-invitation-token:
+ *   post:
+ *     summary: Validate a user invitation token
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Token validated
+ *       404:
+ *         description: Token not found
+ *       500:
+ *         description: Internal server error
+ */
 router.post('/validate-user-invitation-token', (request, response) => {
     const token = request.body.token;
 
@@ -346,6 +515,29 @@ router.post('/validate-user-invitation-token', (request, response) => {
 
 
 
+/**
+ * @swagger
+ * /api/users/validate-company-invitation-token:
+ *   post:
+ *     summary: Validate a company invitation token
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Token validated
+ *       404:
+ *         description: Token not found
+ *       500:
+ *         description: Internal server error
+ */
 router.post('/validate-company-invitation-token', (request, response) => {
     const token = request.query.token;
 
@@ -363,6 +555,29 @@ router.post('/validate-company-invitation-token', (request, response) => {
         });
 });
 
+/**
+ * @swagger
+ * /api/users/register-user:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: User registered successfully
+ *       400:
+ *         description: Registration failed
+ *       500:
+ *         description: Internal server error
+ */
 // Register user
 router.post('/register-user', (request, response) => {
     const user = request.query.user || request.body.user;
@@ -460,6 +675,33 @@ router.post('/get-company-by-email', (request, response) => {
         });
 });
 
+/**
+ * @swagger
+ * /api/users/get-all-users:
+ *   post:
+ *     summary: Get all users
+ *     tags: [Users]
+ *     responses:
+ *       200:
+ *         description: A list of users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       404:
+ *         description: No users found
+ *       500:
+ *         description: Internal server error
+ */
 router.post('/get-all-users', (request, response) => {
     
 
@@ -477,6 +719,33 @@ router.post('/get-all-users', (request, response) => {
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
+/**
+ * @swagger
+ * /api/users/get-all-user-roles:
+ *   post:
+ *     summary: Get all user roles
+ *     tags: [Users]
+ *     responses:
+ *       200:
+ *         description: A list of user roles
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       404:
+ *         description: No user roles found
+ *       500:
+ *         description: Internal server error
+ */
 router.post('/get-all-user-roles', (request, response) => {
 
     dboperations.getAllUserRoles()
@@ -493,6 +762,33 @@ router.post('/get-all-user-roles', (request, response) => {
 });
 
 
+/**
+ * @swagger
+ * /api/users/get-all-companies:
+ *   post:
+ *     summary: Get all companies
+ *     tags: [Users]
+ *     responses:
+ *       200:
+ *         description: A list of companies
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       404:
+ *         description: No companies found
+ *       500:
+ *         description: Internal server error
+ */
 router.post('/get-all-companies', (request, response) => {
     
 

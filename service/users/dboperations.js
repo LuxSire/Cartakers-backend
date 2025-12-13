@@ -9,6 +9,11 @@ const axios = require("axios"); //  Import axios
 
 
 
+/**
+ * Delete a user by their ID.
+ * @param {string|number} user_id - The ID of the user to delete.
+ * @returns {Promise<{success: boolean, message: string, data: any}>}
+ */
 async function deleteUserbyId(user_id) {
     try {
         const [result] = await pool.execute(
@@ -32,6 +37,11 @@ async function deleteUserbyId(user_id) {
     }
 }
 
+/**
+ * Delete a company by its ID.
+ * @param {string|number} company_id - The ID of the company to delete.
+ * @returns {Promise<{success: boolean, message: string, data: any}>}
+ */
 async function deleteCompanyById(company_id) {
     try {
         const [result] = await pool.execute(
@@ -58,6 +68,11 @@ async function deleteCompanyById(company_id) {
 
 //// start flutter calls 
 
+/**
+ * Validate a user invitation token.
+ * @param {string} token - The invitation token to validate.
+ * @returns {Promise<{success: boolean, message: string, data: any}>}
+ */
 async function validateUserInvitationToken(token) {
     try {
         const [result] = await pool.execute(
@@ -82,6 +97,11 @@ async function validateUserInvitationToken(token) {
 }
 
 
+/**
+ * Validate a company invitation token.
+ * @param {string} token - The company invitation token to validate.
+ * @returns {Promise<{success: boolean, message: string, data: any}>}
+ */
 async function validateCompanyInvitationToken(token) {
     try {
         const [result] = await pool.execute(
@@ -105,6 +125,11 @@ async function validateCompanyInvitationToken(token) {
     }
 }
 
+/**
+ * Register a new user.
+ * @param {object} user - The user object containing registration details.
+ * @returns {Promise<{success: boolean, message: string, data: any}>}
+ */
 async function registerUser(user) {
     try {
 
@@ -145,6 +170,11 @@ async function registerUser(user) {
     }
 }
 
+/**
+ * Register or update a company.
+ * @param {object} company - The company object containing registration details.
+ * @returns {Promise<{success: boolean, message: string, data: any}>}
+ */
 async function RegisterUpdateCompany(company) {
     try {
 
@@ -180,6 +210,11 @@ async function RegisterUpdateCompany(company) {
 
 
 
+/**
+ * Log in a user.
+ * @param {object} user - The user object containing email and password.
+ * @returns {Promise<{success: boolean, message: string, data: any}>}
+ */
 async function loginUser(user) {
     try {
         const { email, password } = user;
@@ -205,6 +240,11 @@ async function loginUser(user) {
     }
 }
 
+/**
+ * Get a user by their email address.
+ * @param {string} email - The user's email address.
+ * @returns {Promise<{success: boolean, message: string, data: any}>}
+ */
 async function getUserByEmail(email) {
     try {
 
@@ -236,6 +276,11 @@ async function getUserByEmail(email) {
     }
 }
 
+/**
+ * Get a company by its email address.
+ * @param {string} email - The company's email address.
+ * @returns {Promise<{success: boolean, message: string, data: any}>}
+ */
 async function getCompanyByEmail(email) {
     try {
 
