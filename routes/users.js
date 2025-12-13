@@ -1201,7 +1201,7 @@ router.post('/get-all-user-permissions', (request, response) => {
 
 
 router.post('/create-quick-new-user', (request, response) => {
-    let { first_name, last_name, email, phone_number, role_id, company_id,token } = request.body || request.query;
+    let { first_name, last_name, email, phone_number, role_id, company_id,message,token } = request.body || request.query;
 
 
             if (!token) {
@@ -1210,7 +1210,7 @@ router.post('/create-quick-new-user', (request, response) => {
             }   
 
 
-    dboperations.createQuickNewUser(first_name, last_name, email, phone_number, role_id, company_id,token)
+    dboperations.createQuickNewUser(first_name, last_name, email, phone_number, role_id, company_id,message,token)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);

@@ -1171,12 +1171,12 @@ async function createQuickNewCompany(name, email, phone_number, city, country, r
     }
 }
 
-async function createQuickNewUser(first_name, last_name, email, phone_number,roleID, companyID,token) {
+async function createQuickNewUser(first_name, last_name, email, phone_number,roleID, companyID,message,token) {
     try {
 
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.create_quick_new_user(?,?,?,?,?,?,?)`,
-            [first_name, last_name, email, phone_number, roleID, companyID, token]
+            `CALL ${process.env['DB_DATABASE']}.create_quick_new_user(?,?,?,?,?,?,?,?)`,
+            [first_name, last_name, email, phone_number, roleID, companyID, message,token]
         );
         
 

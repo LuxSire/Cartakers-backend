@@ -370,13 +370,13 @@ async function updateObjectDetails(object_id, name, street, zip_code, location, 
     }
 }
 
-async function updateUnitDetails(unit_id, description,sqm) {
+async function updateUnitDetails(unit_id, description,sqm,status_id) {
     try {
 
 
         const [result] = await pool.execute(
-            `CALL ${process.env['DB_DATABASE']}.update_unit_details(?,?,?)`,
-            [unit_id, description,sqm]
+            `CALL ${process.env['DB_DATABASE']}.update_unit_details(?,?,?,?)`,
+            [unit_id, description,sqm,status_id]
         );
 
         const data = result[0] || [];

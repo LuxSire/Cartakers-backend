@@ -264,10 +264,10 @@ router.post('/update-object-details', (request, response) => {
 });
 
 router.post('/update-unit-details', (request, response) => {
-    const { unit_id, description,sqm } = request.body;
+    const { unit_id, description,sqm,status_id } = request.body;
 
 
-    dboperations.updateUnitDetails(unit_id,description,sqm)
+    dboperations.updateUnitDetails(unit_id,description,sqm,status_id)
         .then(result => {
             if (!result.success) {
                 return response.status(400).json(result);
@@ -501,6 +501,8 @@ router.post('/update-object', (request, response) => {
             country: jsonData.country || '',
             yield_net: jsonData.yield_net || 0,
             yield_gross: jsonData.yield_gross || 0,
+            noi: jsonData.noi || 0,
+            cap_rate: jsonData.cap_rate || 0
         });
 
 
