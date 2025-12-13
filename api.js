@@ -3,7 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const admin = require("./service/firebase");
+//const admin = require("./service/firebase");
 const crypto = require('crypto');
 const { translateText } = require("./translation"); // Import the translation service
 const axios = require("axios"); //  Import axios
