@@ -1,3 +1,9 @@
+/**
+ * @swagger
+ * tags:
+ *   name: Objects
+ *   description: Endpoints for managing objects and related data
+ */
 const express = require('express');
 const router = express.Router();
 const dboperations = require('../service/objects/dboperations'); // Import the appropriate database operations module
@@ -5,6 +11,34 @@ const e = require('express');
 const { json } = require('body-parser');
 
 
+/**
+ * @swagger
+ * /api/objects/get-user-docs:
+ *   post:
+ *     summary: Get all documents for a user
+ *     tags: [Objects]
+ *     parameters:
+ *       - in: query
+ *         name: user_id
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: The user ID
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user_id:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: List of user documents
+ *       404:
+ *         description: User or documents not found
+ */
 router.post('/get-user-docs', (request, response) => {
     const user_id = request.query.user_id || request.body.user_id;
 
@@ -24,6 +58,34 @@ router.post('/get-user-docs', (request, response) => {
         });
 });
 
+/**
+ * @swagger
+ * /api/objects/get-object-docs:
+ *   post:
+ *     summary: Get all documents for an object
+ *     tags: [Objects]
+ *     parameters:
+ *       - in: query
+ *         name: object_id
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: The object ID
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               object_id:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: List of object documents
+ *       400:
+ *         description: object_id is required
+ */
 router.post('/get-object-docs', async (request, response) => {
     const object_id = request.body.object_id || request.query.object_id;
 
@@ -41,6 +103,27 @@ router.post('/get-object-docs', async (request, response) => {
 });
 
 // Get all document URLs for an object from Azure Blob Storage
+/**
+ * @swagger
+ * /api/objects/get-object-doc-urls:
+ *   post:
+ *     summary: Get all document URLs for an object from Azure Blob Storage
+ *     tags: [Objects]
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               object_id:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: List of document URLs
+ *       400:
+ *         description: object_id is required
+ */
 router.post('/get-object-doc-urls', (request, response) => {
     const object_id = request.body.object_id || request.query.object_id;
 
@@ -61,6 +144,25 @@ router.post('/get-object-doc-urls', (request, response) => {
         });
 });
 // Get Last Object Announcement
+/**
+ * @swagger
+ * /api/objects/get-object-last-announcement:
+ *   post:
+ *     summary: Get the last announcement for an object
+ *     tags: [Objects]
+ *     parameters:
+ *       - in: query
+ *         name: object_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The object ID
+ *     responses:
+ *       200:
+ *         description: Last announcement for the object
+ *       404:
+ *         description: Not found
+ */
 router.post('/get-object-last-announcement', (request, response) => {
     const object_id = request.query.object_id;
 
@@ -79,6 +181,25 @@ router.post('/get-object-last-announcement', (request, response) => {
 });
 
 // Get object Request Logs
+/**
+ * @swagger
+ * /api/objects/get-object-request-logs:
+ *   post:
+ *     summary: Get request logs for an object
+ *     tags: [Objects]
+ *     parameters:
+ *       - in: query
+ *         name: request_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The request ID
+ *     responses:
+ *       200:
+ *         description: Request logs
+ *       404:
+ *         description: Not found
+ */
 router.post('/get-object-request-logs', (request, response) => {
     const request_id = request.query.request_id;
 
@@ -97,6 +218,25 @@ router.post('/get-object-request-logs', (request, response) => {
         });
 });
 
+/**
+ * @swagger
+ * /api/objects/get-object-contact-numbers:
+ *   post:
+ *     summary: Get contact numbers for an object
+ *     tags: [Objects]
+ *     parameters:
+ *       - in: query
+ *         name: object_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The object ID
+ *     responses:
+ *       200:
+ *         description: Contact numbers
+ *       404:
+ *         description: Not found
+ */
 router.post('/get-object-contact-numbers', (request, response) => {
     const object_id = request.query.object_id;
 
@@ -116,6 +256,37 @@ router.post('/get-object-contact-numbers', (request, response) => {
 });
 
 
+/**
+ * @swagger
+ * /api/objects/get-object-posts:
+ *   post:
+ *     summary: Get posts for an object
+ *     tags: [Objects]
+ *     parameters:
+ *       - in: query
+ *         name: object_id
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: The object ID
+ *       - in: query
+ *         name: user_id
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: The user ID
+ *       - in: query
+ *         name: user_type
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: The user type
+ *     responses:
+ *       200:
+ *         description: List of posts
+ *       404:
+ *         description: Not found
+ */
 router.post('/get-object-posts', (request, response) => {
     const object_id = request.query.object_id;
     const user_id = request.query.user_id;
@@ -143,6 +314,27 @@ router.post('/get-object-posts', (request, response) => {
 
 
 
+/**
+ * @swagger
+ * /api/objects/get-object-by-id:
+ *   post:
+ *     summary: Get object by ID
+ *     tags: [Objects]
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Object details
+ *       404:
+ *         description: Not found
+ */
 router.post('/get-object-by-id', (request, response) => {
     const id = request.body.id || request.query.id;
 
@@ -161,6 +353,27 @@ router.post('/get-object-by-id', (request, response) => {
 });
 
 
+/**
+ * @swagger
+ * /api/objects/get-objects-by-user-id:
+ *   post:
+ *     summary: Get all objects for a user
+ *     tags: [Objects]
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user_id:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: List of objects
+ *       400:
+ *         description: user_id is required
+ */
 router.post('/get-objects-by-user-id', (request, response) => {
         const user_id = request.body.user_id || request.query.user_id;
 
@@ -202,6 +415,18 @@ router.post('/get-objects-by-company-id', (request, response) => {
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
+/**
+ * @swagger
+ * /api/objects/get-all-objects:
+ *   post:
+ *     summary: Get all objects
+ *     tags: [Objects]
+ *     responses:
+ *       200:
+ *         description: List of all objects
+ *       404:
+ *         description: No objects found
+ */
 router.post('/get-all-objects', (request, response) => {
     
 
