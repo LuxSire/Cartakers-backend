@@ -444,6 +444,18 @@ router.post('/get-all-objects', (request, response) => {
             response.status(500).json({ success: false, message: "Internal server error" });
         });
 });
+/**
+ * @swagger
+ * /objects/get-all-zoning:
+ *   post:
+ *     summary: Get all zoning information
+ *     tags: [Objects]
+ *     responses:
+ *       200:
+ *         description: List of all zoning entries
+ *       404:
+ *         description: No zoning found
+ */
 router.post('/get-all-zoning', (request, response) => {
     dboperations.getAllZoning()
         .then(result => {
@@ -471,6 +483,39 @@ router.post('/get-all-types', (request, response) => {
         });
 });
 
+/**
+ * @swagger
+ * /objects/update-object-details:
+ *   post:
+ *     summary: Update object details
+ *     tags: [Objects]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               object_id:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *               street:
+ *                 type: string
+ *               zip_code:
+ *                 type: string
+ *               location:
+ *                 type: string
+ *               image_url:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Object updated successfully
+ *       400:
+ *         description: Invalid input
+ */
 router.post('/update-object-details', (request, response) => {
     const { object_id, name, street,  zip_code, location, image_url,description } = request.body;
 
@@ -541,6 +586,34 @@ router.post('/update-object-field', (request, response) => {
 
 
 
+/**
+ * @swagger
+ * /objects/add-user-to-object:
+ *   post:
+ *     summary: Add a user to an object
+ *     tags: [Objects]
+ *     parameters:
+ *       - in: query
+ *         name: object_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The object ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user_id:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User added to object
+ *       404:
+ *         description: Object or user not found
+ */
 router.post('/add-user-to-object', (request, response) => {
     const object_id = request.query.object_id;
     const user_id = request.body.user_id;
@@ -663,7 +736,6 @@ router.post('/create-object', (request, response) => {
             description: jsonData.description || '',
             city: jsonData.country || '',
             state: jsonData.state || '',
-            city: jsonData.city || '',
             price: jsonData.price || 0,
             currency: jsonData.currency || '',
             floors: jsonData.total_floors || 1,
@@ -714,7 +786,6 @@ router.post('/update-object', (request, response) => {
             city: jsonData.country || '',
             state: jsonData.state || '',
             status: jsonData.status || '',
-            city: jsonData.city || '',
             price: jsonData.price || 0,
             currency: jsonData.currency || '',
             floors: jsonData.total_floors || 1,
